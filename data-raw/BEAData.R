@@ -740,3 +740,50 @@ getBEASectorMarginsBeforeRedef2012Schema <- function () {
 }
 Sector_Margins_2012_BeforeRedef <- getBEASectorMarginsBeforeRedef2012Schema()[["2012"]]
 usethis::use_data(Sector_Margins_2012_BeforeRedef, overwrite = TRUE)
+
+# Get state GDP, employee compensation, taxes, gross operating surplus 2007-2018
+getBEAStateData <- function (dataname) {
+  # Create the placeholder file
+  StateGDPzip <- "inst/extdata/SAGDP.zip"
+  # Download all BEA IO tables into the placeholder file
+  if(!file.exists(StateGDPzip)) {
+    download.file("https://apps.bea.gov/regional/zip/SAGDP.zip", StateGDPzip, mode = "wb")
+    # Get the name of all files in the zip archive
+    fname <- unzip(StateGDPzip, list = TRUE)[unzip(StateGDPzip, list = TRUE)$Length > 0, ]$Name
+    # Unzip the file to the designated directory
+    unzip(StateGDPzip, files = fname, exdir = "inst/extdata/SAGDP", overwrite = TRUE)
+  }
+  # Determine data filename
+  if (dataname=="GDP") {
+    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP2N__ALL_AREAS_1997_2018.csv")
+  } else if (dataname=="Compensation") {
+    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP4N__ALL_AREAS_1997_2018.csv")
+  } else if (dataname=="Tax") {
+    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP6N__ALL_AREAS_1997_2018.csv")
+  } else if (dataname=="GOS") {
+    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP7N__ALL_AREAS_1997_2018.csv")
+  }
+  # Load state data
+  StateData <- utils::read.table(FileName, sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
+  StateData <- StateData[!is.na(StateData$LineCode), ]
+  # Convert values to numeric
+  StateData[, as.character(2007:2018)] <- sapply(StateData[, as.character(2007:2018)], as.numeric)
+  # Convert values to current US $
+  if (unique(StateData$Unit)=="Millions of current dollars") {
+    StateData[, as.character(2007:2018)] <- StateData[, as.character(2007:2018)]*1E6
+  } else if (unique(StateData$Unit)=="Thousands of dollars") {
+    StateData[, as.character(2007:2018)] <- StateData[, as.character(2007:2018)]*1E3
+  }
+  # Keep state-level data
+  StateData <- StateData[StateData$GeoName %in% state.name, c("GeoName", "LineCode", "Description", as.character(2007:2018))]
+  
+  return(StateData)
+}
+State_GDP_2007_2018 <- getBEAStateData("GDP")
+usethis::use_data(State_GDP_2007_2018, overwrite = TRUE)
+State_Compensation_2007_2018 <- getBEAStateData("Compensation")
+usethis::use_data(State_Compensation_2007_2018, overwrite = TRUE)
+State_Tax_2007_2018 <- getBEAStateData("Tax")
+usethis::use_data(State_Tax_2007_2018, overwrite = TRUE)
+State_GOS_2007_2018 <- getBEAStateData("GOS")
+usethis::use_data(State_GOS_2007_2018, overwrite = TRUE)

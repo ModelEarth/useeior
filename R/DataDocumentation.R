@@ -670,3 +670,91 @@
 #'  \item{NAICS_2007_Code}{text code}
 #' }
 "MasterCrosswalk2012"
+
+#' State GDP table (2007-2018)
+#' @format A dataframe with 4550 obs. and 15 variables
+#' \describe{
+#'  \item{GeoName}{text code}
+#'  \item{LineCode}{integer}
+#'  \item{Description}{text code}
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#'  \item{2018}{current year USD}
+#' }
+#' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
+"State_GDP_2007_2018"
+
+#' State Employee Compensation table (2007-2018)
+#' @format A dataframe with 4550 obs. and 15 variables
+#' \describe{
+#'  \item{GeoName}{text code}
+#'  \item{LineCode}{integer}
+#'  \item{Description}{text code}
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#'  \item{2018}{current year USD}
+#' }
+#' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
+"State_Compensation_2007_2018"
+
+#' State Tax table (2007-2018)
+#' @format A dataframe with 4550 obs. and 15 variables
+#' \describe{
+#'  \item{GeoName}{text code}
+#'  \item{LineCode}{integer}
+#'  \item{Description}{text code}
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#'  \item{2018}{current year USD}
+#' }
+#' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
+"State_Tax_2007_2018"
+
+#' State GOS table (2007-2018)
+#' @format A dataframe with 4550 obs. and 15 variables
+#' \describe{
+#'  \item{GeoName}{text code}
+#'  \item{LineCode}{integer}
+#'  \item{Description}{text code}
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#'  \item{2018}{current year USD}
+#' }
+#' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
+"State_GOS_2007_2018"
