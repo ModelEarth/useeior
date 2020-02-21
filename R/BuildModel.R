@@ -14,6 +14,9 @@ prepareEEIOModel <- function(modelname) {
     model$Commodities <- model$BEA$Commodities
     model$Industries <- model$BEA$Industries
   }
+  
+  ##Fork for state model here
+  
   # Get model$Make, model$Use, model$MakeTransactions, model$UseTransactions, and model$UseValueAdded
   model$Make <- model$BEA$Make
   model$Use <- model$BEA$Use
