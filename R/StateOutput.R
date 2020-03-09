@@ -15,8 +15,6 @@ getBEAStateGDP <- function(model) {
                     by.x = "BEA_2012_Summary_Code", by.y = 0)
   # Rename columns
   colnames(StateGDP) <- c("SectorCode", "SoI", "US")
-  # Convert GDP from million USD to USD
-  StateGDP$SoI <- StateGDP$SoI * 1E6
   # Aggregate from Summary to Sector if model is Sector-level
   if (model$BaseIOLevel == "Sector") {
     # aggregate from BEA Summary to Sector level
@@ -27,4 +25,3 @@ getBEAStateGDP <- function(model) {
   }
   return(StateGDP)
 }
-
