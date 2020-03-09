@@ -13,7 +13,7 @@ getStandardSatelliteTableFormat <- function () {
 #' @return A satellite table aggregated by the USEEIO model sector codes.
 mapSatTablefromNAICStoBEA <- function (sattable, satellitetableyear) {
   # Generate NAICS-to-BEA mapping dataframe based on MasterCrosswalk2012, assuming NAICS are 2012 NAICS.
-  NAICStoBEA <- unique(MasterCrosswalk2012[, c("NAICS_2012_Code", paste("BEA", model$specs$BaseIOSchema, "Detail_Code", sep = "_"))])
+  NAICStoBEA <- unique(useeior::MasterCrosswalk2012[, c("NAICS_2012_Code", paste("BEA", model$specs$BaseIOSchema, "Detail_Code", sep = "_"))])
   colnames(NAICStoBEA) <- c("NAICS", "SectorCode")
   # Assign DQTechnological score based on the the correspondence between NAICS and BEA code:
   # If there is allocation (1 NAICS to 2 or more BEA), DQTechnological score = 2, otherwise, 1.
@@ -42,12 +42,14 @@ mapSatTablefromNAICStoBEA <- function (sattable, satellitetableyear) {
 }
 
 #' Calculates intensity coefficient (kg/$) for a standard satellite table.
+#'
 #' @param sattable A standardized satellite table with resource and emission names from original sources.
 #' @param outputyear Year of Industry output.
 #' @param referenceyear Year of the currency reference.
 #' @param location_acronym Abbreviated location name of the model, e.g. "US" or "GA".
-#' @param IsRoU A logical parameter indicating whether to adjust Industry output for Rest of US (RoU).
+#' @param IsRoUS A logical parameter indicating whether to adjust Industry output for Rest of US (RoUS).
 #' @param model A complete EEIO model: a list with USEEIO model components and attributes.
+#'
 #' @return A dataframe contains intensity coefficient (kg/$).
 generateFlowtoDollarCoefficient <- function (sattable, outputyear, referenceyear, location_acronym, IsRoUS = FALSE, model) {
   # Generate adjusted industry output
@@ -129,7 +131,7 @@ aggregateSatelliteTable <- function(sattable, from_level, to_level, model) {
   from_code <- paste("BEA", model$specs$BaseIOSchema, from_level, "Code", sep = "_")
   to_code <- paste("BEA", model$specs$BaseIOSchema, to_level, "Code", sep = "_")
   # Merge the satellite table with MasterCrosswalk2012
-  sattable <- merge(sattable, unique(MasterCrosswalk2012[, c(from_code, to_code)]), by.x = "SectorCode", by.y = from_code)
+  sattable <- merge(sattable, unique(useeior::MasterCrosswalk2012[, c(from_code, to_code)]), by.x = "SectorCode", by.y = from_code)
   # Replace NA in DQ cols with 5
   dq_fields <- getDQfields(sattable)
   for (f in dq_fields) {

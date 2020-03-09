@@ -3,7 +3,7 @@
 #' @return A table of allocation factors between NAICS and BEA sectors.
 getNAICStoBEAAllocation <- function (year) {
   # Keep USEEIO and NAICS columns in MasterCrosswalk2012 table based on the model specs
-  NAICStoBEA <- unique(MasterCrosswalk2012[, c(paste("NAICS", model$specs$BaseIOSchema, "Code", sep = "_"),
+  NAICStoBEA <- unique(useeior::MasterCrosswalk2012[, c(paste("NAICS", model$specs$BaseIOSchema, "Code", sep = "_"),
                                                paste("BEA", model$specs$BaseIOSchema, model$specs$BaseIOLevel, "Code", sep = "_"))])
   colnames(NAICStoBEA) <- c("NAICS_Code", "BEA_Code")
   # Drop 2-digit NAICS code
@@ -31,20 +31,19 @@ getNAICStoBEAAllocation <- function (year) {
 #' Get 2-6 digit NAICS codes and names for year specified.
 #' @param year int. 2012 or 2007 accepted.
 #' @return dataframe with columns NAICS_year_Code and NAICS_year_Name.
-#' @export 
 getNAICS2to6DigitsCodeName <- function (year) {
   if (year == 2012) {
     # Download the 2-6 digits NAICS table
     FileName <- "2-digit_2012_Codes.xls"
     if(!file.exists(FileName)) {
-      download.file("https://www.census.gov/eos/www/naics/2012NAICS/2-digit_2012_Codes.xls", FileName, mode = "wb")
+      utils::download.file("https://www.census.gov/eos/www/naics/2012NAICS/2-digit_2012_Codes.xls", FileName, mode = "wb")
     }
     NAICS <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE))[-1,-1]
   } else { #year = 2007
     # Download the 2-6 digits NAICS table
     FileName <- "naics07.xls"
     if(!file.exists(FileName)) {
-      download.file("https://www.census.gov/eos/www/naics/reference_files_tools/2007/naics07.xls", FileName, mode = "wb")
+      utils::download.file("https://www.census.gov/eos/www/naics/reference_files_tools/2007/naics07.xls", FileName, mode = "wb")
     }
     NAICS <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE))[-1,-1]
   }
@@ -70,20 +69,19 @@ getNAICS2to6DigitsCodeName <- function (year) {
 #' Get 2-6 digit NAICS codes in a crosswalk format for year specified.
 #' @param year int, 2012 or 2007 accepted.
 #' @return data frame with columns NAICS_2, NAICS_3, NAICS_4, NAICS_5, NAICS_6.
-#' @export
 getNAICS2to6Digits <- function (year) {
   if (year == 2012) {
     # Download the 2-6 digits NAICS table
     FileName <- "2-digit_2012_Codes.xls"
     if(!file.exists(FileName)) {
-      download.file("https://www.census.gov/eos/www/naics/2012NAICS/2-digit_2012_Codes.xls", FileName, mode = "wb")
+      utils::download.file("https://www.census.gov/eos/www/naics/2012NAICS/2-digit_2012_Codes.xls", FileName, mode = "wb")
     }
     NAICS <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE))[-1,-1]
   } else { #year = 2007
     # Download the 2-6 digits NAICS table
     FileName <- "naics07.xls"
     if(!file.exists(FileName)) {
-      download.file("https://www.census.gov/eos/www/naics/reference_files_tools/2007/naics07.xls", FileName, mode = "wb")
+      utils::download.file("https://www.census.gov/eos/www/naics/reference_files_tools/2007/naics07.xls", FileName, mode = "wb")
     }
     NAICS <- as.data.frame(readxl::read_excel("naics07.xls", sheet = 1, col_names = TRUE))[-1,-1]
   }
@@ -101,8 +99,10 @@ getNAICS2to6Digits <- function (year) {
 }
 
 #' Get 7-10 digit NAICS codes and names (agricultural, manufacturing, and mining industries) for year specified.
+#'
+#' @param year int. 2012 or 2007 accepted.
+#'
 #' @return data frame with columns NAICS_year_Code and NAICS_year_Name.
-#' @export
 getNAICS7to10DigitsCodeName <- function (year) {
   if (year==2012) {
     # Download Census 2012 Numerical List of Manufactured and Mineral Products
@@ -111,21 +111,38 @@ getNAICS7to10DigitsCodeName <- function (year) {
     td <- tempdir()
     tf <- tempfile(tmpdir = tempdir(), fileext = ".csv")
     for(sector in SectorList) {
-      download.file(paste("https://www.census.gov/manufacturing/numerical_list/", sector, ".xls", sep = ""), tf, mode = "wb")
+      utils::download.file(paste("https://www.census.gov/manufacturing/numerical_list/", sector, ".xls", sep = ""), tf, mode = "wb")
       CensusNAICSList[[sector]] <- as.data.frame(readxl::read_excel(tf, sheet = 1, col_names = TRUE, skip = 2))[, 1:2]
       colnames(CensusNAICSList[[sector]]) <- c("NAICS_2012_Code", "NAICS_2012_Name")
     }
     CensusNAICS <- do.call(rbind, CensusNAICSList)
     # NAICS from USDA
-    # Note for Catherine: you could insert the code of pulling USDA NAICS here.
+    coaNAICS <- utils::read.table(system.file("extdata", "Crosswalk_COAtoNAICS.csv", package = "useeior"),
+                                  sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+    # Subset dataset and change column names to match other NAICS datasets
+    coaNAICS <- coaNAICS[, c("Sector", "Activity")]
+    colnames(coaNAICS) <- c("NAICS_2012_Code", "NAICS_2012_Name")
+    
+    # Create 10 digit NAICS out of the 8 digit so Code name isn't dropped in future function
+    coaNAICS10 <- coaNAICS
+    coaNAICS10$NAICS_2012_Code <- stringr::str_pad(coaNAICS10$NAICS_2012_Code, width=10, side="right", pad="0")
+    
+    # row bind 8 digit and 10 digit Census of Ag NAICS
+    coaNAICS <- rbind(coaNAICS, coaNAICS10)
+    
+    # row bind NAICS data from different sources
+    CensusNAICS <- rbind(CensusNAICS, coaNAICS)
+    
   }
-
+  
   return(CensusNAICS)
 }
 
 #' Get 7-10 digit NAICS codes in a crosswalk format for year specified.
+#'
+#' @param year int. 2012 or 2007 accepted.
+#'
 #' @return data frame with columns NAICS_7, NAICS_8, NAICS_9, NAICS_10.
-#' @export
 getNAICS7to10Digits <- function (year) {
   NAICSCodeName <- getNAICS7to10DigitsCodeName(year)
   # Change column name from year-specific to generic
@@ -142,6 +159,9 @@ getNAICS7to10Digits <- function (year) {
 }
 
 #' Get 2012 2-10 digit NAICS codes in a crosswalk format for year specified.
+#'
+#' @param year int. 2012 or 2007 accepted.
+#'
 #' @return data frame with columns NAICS_2, NAICS_3, NAICS_4, NAICS_5, NAICS_6, NAICS_7, NAICS_8, NAICS_9, NAICS_10.
 #' @export
 getNAICSCrosswalk <- function(year) {
@@ -159,6 +179,9 @@ getNAICSCrosswalk <- function(year) {
 }
 
 #' Get 2012 2-10 digit NAICS codes in a crosswalk format.
+#'
+#' @param year int. 2012 or 2007 accepted.
+#'
 #' @return data frame with columns NAICS_2, NAICS_3, NAICS_4, NAICS_5, NAICS_6, NAICS_7, NAICS_8, NAICS_9, NAICS_10.
 #' @export
 getNAICSCodeName <- function(year) {

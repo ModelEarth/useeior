@@ -1,16 +1,19 @@
 #' Adjust Industry output based on CPI.
+#'
 #' @param outputyear Year of Industry output.
+#' @param referenceyear Year of the currency reference.
 #' @param location_acronym Abbreviated location name of the model, e.g. "US" or "GA".
-#' @param IsRoU A logical parameter indicating whether to adjust Industry output for Rest of US (RoU).
+#' @param IsRoUS A logical parameter indicating whether to adjust Industry output for Rest of US (RoUS).
 #' @param model A complete EEIO model: a list with USEEIO model components and attributes.
+#'
 #' @return A dataframe contains adjusted Industry output with row names being BEA sector code.
-getAdjustedOutput <- function (outputyear, referenceyear, location_acronym, IsRoU, model) {
+getAdjustedOutput <- function (outputyear, referenceyear, location_acronym, IsRoUS, model) {
   # Load Industry Gross Output
   if (model$specs$PrimaryRegionAcronym == "US") {
     Output <- cbind.data.frame(rownames(model$GDP$BEAGrossOutputIO), model$GDP$BEAGrossOutputIO[, as.character(outputyear)])
   } else {
     if(model$specs$ModelSource=="WinDC") {
-      if(IsRoU == TRUE) {
+      if(IsRoUS == TRUE) {
         Output <- model$IndustryOutput[model$IndustryOutput$Location=="RoUS", c("SectorCode", as.character(outputyear)), drop = FALSE]
         rownames(Output) <- Output$SectorCode
       } else {
@@ -20,11 +23,11 @@ getAdjustedOutput <- function (outputyear, referenceyear, location_acronym, IsRo
       # This is if model is using calculated state demand
       Output <- getStateIndustryOutput(model$specs$PrimaryRegionAcronym, outputyear)
       row.names(Output) <- Output[,"BEACode"]
-      if(IsRoU == TRUE) {
-        Output$RoU <- Output$US - Output$SoI
-        Output <- subset(Output, select = c(BEACode, RoU))
+      if(IsRoUS == TRUE) {
+        Output$RoUS <- Output$US - Output$SoI
+        Output <- Output[, c("BEACode", "RoUS")]
       } else {
-        Output <- subset(Output, select = c(BEACode, SoI))
+        Output <- Output[, c("BEACode", "SoI")]
       }
     }
   }
@@ -94,10 +97,10 @@ generateCommodityMixMatrix <- function (model) {
 
 #' Generate Commodity output by transforming Industry output using Commodity Mix matrix.
 #' @param location_acronym Abbreviated location name of the model, e.g. "US" or "GA".
-#' @param IsRoU A logical parameter indicating whether to adjust Industry output for Rest of US (RoU).
+#' @param IsRoUS A logical parameter indicating whether to adjust Industry output for Rest of US (RoUS).
 #' @param model A complete EEIO model: a list with USEEIO model components and attributes.
 #' @return A dataframe contains adjusted Commodity output.
-generateCommodityOutputforYear <- function(location_acronym, IsRoU, model) {
+generateCommodityOutputforYear <- function(location_acronym, IsRoUS, model) {
   # Generate a commodity x industry commodity mix matrix, see Miller and Blair section 5.3.2
   CommodityMix <- generateCommodityMixMatrix(model)
   # Generate adjusted industry output by location
@@ -157,7 +160,7 @@ transformDirectRequirementswithMarketShares <- function (B, D) {
     A <- D %*% B
     dimnames(A) <- c(dimnames(D)[1], dimnames(B)[2])
   } else {
-    logging:logerror("commoditybyIndustryType not specified for model or incorrectly specified")
+    logging::logerror("commoditybyIndustryType not specified for model or incorrectly specified")
   }
   return(A)
 }
@@ -228,9 +231,9 @@ generateOutputBasedAllocationFactorsByGroup <- function(codeswithgroups) {
 #' @return A dataframe contains "imports_used_by_industry", "total_used_by_industry", and "import_ratio_of_industry_use".
 getIndustryUseofImportedCommodities <- function() {
   ImportDetail <- getImportDetailwithUseCommodities()
-  TotalIndustryUseofImportedCommoditiesfromImportDetail <- subset(ImportDetail, select = "T001")
+  TotalIndustryUseofImportedCommoditiesfromImportDetail <- ImportDetail[, "T001"]
   UseDetail <- getUseDetailwithCommoditiesOnly()
-  TotalIndustryUseofCommoditiesfromUseDetail <- subset(UseDetail, select = "T001")
+  TotalIndustryUseofCommoditiesfromUseDetail <- UseDetail[, "T001"]
   proportion_imports_in_industryuse <- cbind(TotalIndustryUseofImportedCommoditiesfromImportDetail,TotalIndustryUseofCommoditiesfromUseDetail)
   proportion_imports_in_industryuse[, "import_ratio"] <- proportion_imports_in_industryuse[, 1]/proportion_imports_in_industryuse[, 2]
   colnames(proportion_imports_in_industryuse) <- c("imports_used_by_industry", "total_used_by_industry", "import_ratio_of_industry_use")
@@ -299,6 +302,8 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   names(GrossOutputIOList) <- c("Detail", "Summary", "Sector")
   return(GrossOutputIOList)
 }
+
+
 
 #' Adjust CPI from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
 #' @return A list contains IO-based CPI at Detail, Summary, and Sector IO levels.
@@ -374,16 +379,16 @@ getMarginsTable <- function (model, marginsource) {
   # Load Margins or PCE and PEQ Bridge data
   if (model$specs$BaseIOSchema==2012) {
     if (marginsource=="intermediate") {
-      MarginsTable <- Detail_Margins_2012_BeforeRedef[, 3:9]
+      MarginsTable <- useeior::Detail_Margins_2012_BeforeRedef[, 3:9]
     } else {
       # Use PCE and PEQ Bridge tables
-      PCE <- Detail_PCE_2012[, 3:9]
-      PEQ <- Detail_PEQ_2012[, 3:9]
+      PCE <- useeior::Detail_PCE_2012[, 3:9]
+      PEQ <- useeior::Detail_PEQ_2012[, 3:9]
       MarginsTable <- rbind(PCE, PEQ)
     }
   }
   # Map to Summary and Sector level
-  crosswalk <- unique(MasterCrosswalk2012[,c("BEA_2012_Sector_Code", "BEA_2012_Summary_Code", "BEA_2012_Detail_Code")])
+  crosswalk <- unique(useeior::MasterCrosswalk2012[,c("BEA_2012_Sector_Code", "BEA_2012_Summary_Code", "BEA_2012_Detail_Code")])
   MarginsTable <- merge(MarginsTable, crosswalk, by.x = "CommodityCode", by.y = "BEA_2012_Detail_Code")
   # Aggregate by CommodityCode (dynamic to model BaseIOLevel) and CommodityDescription
   if (!model$specs$BaseIOLevel=="Detail") {
