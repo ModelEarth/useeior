@@ -764,13 +764,13 @@ getBEAStateData <- function (dataname) {
   }
   # Determine data filename
   if (dataname=="GDP") {
-    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP2N__ALL_AREAS_1997_2018.csv")
-  } else if (dataname=="Compensation") {
-    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP4N__ALL_AREAS_1997_2018.csv")
+    FileName <- "inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2018.csv"
   } else if (dataname=="Tax") {
-    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP6N__ALL_AREAS_1997_2018.csv")
+    FileName <- "inst/extdata/SAGDP/SAGDP3N__ALL_AREAS_1997_2018.csv"
+  } else if (dataname=="Compensation") {
+    FileName <- "inst/extdata/SAGDP/SAGDP4N__ALL_AREAS_1997_2018.csv"
   } else if (dataname=="GOS") {
-    FileName <- paste0("inst/extdata/SAGDP/", "SAGDP7N__ALL_AREAS_1997_2018.csv")
+    FileName <- "inst/extdata/SAGDP/SAGDP7N__ALL_AREAS_1997_2018.csv"
   }
   # Load state data
   StateData <- utils::read.table(FileName, sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
@@ -790,9 +790,9 @@ getBEAStateData <- function (dataname) {
 }
 State_GDP_2007_2018 <- getBEAStateData("GDP")
 usethis::use_data(State_GDP_2007_2018, overwrite = TRUE)
-State_Compensation_2007_2018 <- getBEAStateData("Compensation")
-usethis::use_data(State_Compensation_2007_2018, overwrite = TRUE)
 State_Tax_2007_2018 <- getBEAStateData("Tax")
 usethis::use_data(State_Tax_2007_2018, overwrite = TRUE)
+State_Compensation_2007_2018 <- getBEAStateData("Compensation")
+usethis::use_data(State_Compensation_2007_2018, overwrite = TRUE)
 State_GOS_2007_2018 <- getBEAStateData("GOS")
 usethis::use_data(State_GOS_2007_2018, overwrite = TRUE)
