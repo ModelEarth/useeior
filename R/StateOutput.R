@@ -1,27 +1,62 @@
-#' Estimate state industry output
-#' @param model A complete EEIO model: a list with USEEIO model components and attributes.
+#' Get state-level GDP for all states at a specific year.
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @return A dataframe contains state GDP for all states at a specific year.
+getStateGDP <- function(year) {
+  # Load pre-saved state GDP 2007-2018 
+  GDPtable <- useeior::State_GDP_2007_2018
+  StateGDP <- StateGDP[, c("GeoName", "LineCode", as.character(year))]
+  return(StateGDP)
+}
+
+#' Map state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary.
+#' @param statetable Pre-saved state table (GDP, Tax, Employment Compensation, and GOS).
 #' @return A dataframe contains state industry output for specified state with row names being BEA sector code.
-getBEAStateGDP <- function(model) {
+mapStateTabletoBEASummary <- function(statetable) {
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "BEAStateGDPtoBEASummary.csv", package = "useeior"),
                                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
-  # Merge State_GDP with BEA Summary
-  StateGDP <- merge(useeior::State_GDP_2007_2018, BEAStateGDPtoBEASummary, by = "LineCode")
-  # Keep rows for SoI and columns of BEA Summary code
-  StateGDP <- StateGDP[StateGDP$GeoName==state.name[match(model$specs$PrimaryRegionAcronym, state.abb)],
-                       c("BEA_2012_Summary_Code", as.character(model$specs$IOYear))]
-  # Merge with US GDP
-  StateGDP <- merge(StateGDP, model$GDP$BEAGrossOutputIO[, as.character(model$specs$IOYear), drop = FALSE],
-                    by.x = "BEA_2012_Summary_Code", by.y = 0)
-  # Rename columns
-  colnames(StateGDP) <- c("SectorCode", "SoI", "US")
-  # Aggregate from Summary to Sector if model is Sector-level
-  if (model$BaseIOLevel == "Sector") {
-    # aggregate from BEA Summary to Sector level
-    StateGDP <- merge(StateGDP, unique(useeior::MasterCrosswalk2012[, c("BEA_2012_Sector_Code", "BEA_2012_Summary_Code")]),
-                      by.x = "SectorCode", by.y = "BEA_2012_Summary_Code")
-    StateGDP <- stats::aggregate(StateGDP[, c("SoI", "US")], by = list(StateGDP$BEA_2012_Sector_Code), sum)
-    colnames(StateGDP)[1] <- "SectorCode"
-  }
-  return(StateGDP)
+  # Merge state table with BEA Summary sector code and name
+  StateTableBEA <- merge(statetable, BEAStateGDPtoBEASummary, by = "LineCode")
+  return(StateTableBEA)
 }
+
+# Calculate state-US value added ratios.
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @return A dataframe contains ratios of state/US value added for all states at a specific year.
+generateStateUSValueAddedRatios <- function(year) {
+  # Load state value added table
+  StateValueAdded <- getStateGDP(year)
+  # Map state value added table to BEA summary level
+  StateValueAdded <- mapStateTabletoBEA(StateValueAdded)
+  # Apply allocation to the sectors whose value added needs to be allocated
+  
+  # Load US value added table
+  USValueAdded <- model$GDP$BEAGrossOutputIO
+  # Merge state and US value added tables
+  StateUSValueAdded <- merge(StateValueAdded, USValueAdded, by.x = "", by.y = "")
+  # Calculate the state-US value added ratios
+  
+  return(StateUSValueAdded)
+}
+
+#' Estimate state output based on alternative sources.
+#' @param industry A BEA industry name.
+#' @return A dataframe contains state output for all states and a specific industry.
+getAlternativeStateIndustryOutputEstimates <- function(industry) {
+  
+}
+
+#' Estimate state industry output based on BEA and alternative sources.
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @return A dataframe contains state industry output for all states and a specific industry.
+getStateIndustryOutput <- function(year) {
+  
+}
+
+#' Estimate state commodity output
+#' @param location_acronym Abbreviated location name of the model, e.g. "US" or "GA".
+#' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
+getStateCommodityOutputEstimates <- function(location_acronym) {
+  
+}
+
