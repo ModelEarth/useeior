@@ -3,7 +3,7 @@ BaseIOSchema: 2012
 BaseIOLevel: "Summary"
 IOYear: 2016 # Year for IO data
 PrimaryRegionAcronym: "GA"
-ModelRegionAcronyms: ["GA","RoU"]
+ModelRegionAcronyms: ["GA","RoUS"]
 ModelType: "State2R"
 ModelSource: "BEA"
 BasePriceType: "PRO" #producer
