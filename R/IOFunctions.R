@@ -260,7 +260,7 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
-  DetailGrossOutputIO <- merge(DetailGDPIndustrytoIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry", all.y = TRUE)
+  DetailGrossOutputIO <- merge(DetailGDPIndustrytoIO, DetailGrossOutput, by = "Industry", all.y = TRUE)
   # Convert values to numeric format
   DetailGrossOutputIO[, year_range] <- as.data.frame(apply(DetailGrossOutputIO[, year_range], 2, as.numeric))
   # Aggregate by BEA Detail industry code
@@ -303,8 +303,6 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   return(GrossOutputIOList)
 }
 
-
-
 #' Adjust CPI from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
 #' @return A list contains IO-based CPI at Detail, Summary, and Sector IO levels.
 adjustBEACPItoIOIndustry2012Schema <- function () {
@@ -315,7 +313,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
-  DetailCPIIO <- merge(DetailGDPIndustrytoIO, DetailCPI, by = "Gross_Output_Detail_Industry", all.y = TRUE)
+  DetailCPIIO <- merge(DetailGDPIndustrytoIO, DetailCPI, by = "Industry", all.y = TRUE)
   # Convert values to numeric format
   DetailCPIIO[, year_range] <- as.data.frame(apply(DetailCPIIO[, year_range], 2, as.numeric))
   # Adjust (weighted average) CPI based on DetailGrossOutput
@@ -323,7 +321,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   DetailGrossOutput <- getBEADetailGrossOutput2012Schema()
   DetailGrossOutput[, year_range] <- as.data.frame(apply(DetailGrossOutput[, year_range], 2, as.numeric))
   # Merge CPI with GrossOutput
-  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry")
+  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "Industry")
   # Calculate weighted average of CPI
   for (code in unique(DetailCPIIO[, "BEA_2012_Detail_Code"])) {
     for (year in year_range) {
@@ -369,6 +367,45 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   CPIIOList <- list(DetailCPIIO, SummaryCPIIO, SectorCPIIO)
   names(CPIIOList) <- c("Detail", "Summary", "Sector")
   return(CPIIOList)
+}
+
+#' Adjust Value Added from GDP industries to IO industries (2012 schema) at Summary and Sector IO levels.
+#' @return A list contains IO-based Value Added at Summary and Sector IO levels.
+adjustBEAValueAddedtoIOIndustry2012Schema <- function () {
+  # Summary
+  SummaryValueAdded <- getBEASummaryValueAdded2012Schema()
+  # Determine year range
+  year_range <- colnames(SummaryValueAdded)[2:ncol(SummaryValueAdded)]
+  # Attach BEA Detail industry code
+  SummaryGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_SummaryGDPIndustrytoIO2012Schema.csv", package = "useeior"),
+                                              sep = ",", header = TRUE)
+  SummaryValueAddedIO <- cbind(SummaryGDPIndustrytoIO, SummaryValueAdded)
+  # Keep Summary rows
+  SummaryValueAddedIO <- SummaryValueAddedIO[!SummaryValueAddedIO$BEA_2012_Summary_Code == "", c("BEA_2012_Summary_Code", year_range)]
+  # Assign rownames as sector code
+  rownames(SummaryValueAddedIO) <- SummaryValueAddedIO[, 1]
+  SummaryValueAddedIO[, 1] <- NULL
+  # Convert values to numeric format
+  SummaryValueAddedIO[] <- as.data.frame(apply(SummaryValueAddedIO, 2, as.numeric))
+  
+  # Sector
+  SectorValueAdded <- getBEASectorValueAdded2012Schema()
+  # Attach BEA Detail industry code
+  SectorGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_SectorGDPIndustrytoIO2012Schema.csv", package = "useeior"),
+                                             sep = ",", header = TRUE)
+  SectorValueAddedIO <- cbind(SectorGDPIndustrytoIO, SectorValueAdded)
+  # Keep Sector rows
+  SectorValueAddedIO <- SectorValueAddedIO[!SectorValueAddedIO$BEA_2012_Sector_Code == "", c("BEA_2012_Sector_Code", year_range)]
+  # Assign rownames as sector code
+  rownames(SectorValueAddedIO) <- SectorValueAddedIO[, 1]
+  SectorValueAddedIO[, 1] <- NULL
+  # Convert values to numeric format
+  SectorValueAddedIO[] <- as.data.frame(apply(SectorValueAddedIO, 2, as.numeric))
+  
+  # Put ValueAddedIO tables in the ValueAddedIOList
+  ValueAddedIOList <- list(SummaryValueAddedIO, SectorValueAddedIO)
+  names(ValueAddedIOList) <- c("Summary", "Sector")
+  return(ValueAddedIOList)
 }
 
 #' Generate Margins table using either Industry Margins (BEA Margins) or Final Consumer Margins (BEA PCE and PEQ Bridge data).
