@@ -482,7 +482,7 @@ getBEADetailGrossOutput2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
   DetailGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:422, c(2, 13:24)]
-  colnames(DetailGrossOutput) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  colnames(DetailGrossOutput) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
   return(DetailGrossOutput)
 }
 #' Get Summary BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
@@ -494,7 +494,7 @@ getBEASummaryGrossOutput2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
   SummaryGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SummaryGrossOutput) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  colnames(SummaryGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
   return(SummaryGrossOutput)
 }
 #' Get Sector BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
@@ -506,7 +506,7 @@ getBEASectorGrossOutput2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
   SectorGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SectorGrossOutput) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  colnames(SectorGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
   return(SectorGrossOutput)
 }
 
@@ -527,7 +527,7 @@ getBEADetailCPI2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
   DetailCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:422, c(2, 13:24)]
-  colnames(DetailCPI) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  colnames(DetailCPI) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
   return(DetailCPI)
 }
 # Get Summary BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
@@ -539,7 +539,7 @@ getBEASummaryCPI2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
   SummaryCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SummaryCPI) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  colnames(SummaryCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
   return(SummaryCPI)
 }
 # Get Sector BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
@@ -551,7 +551,7 @@ getBEASectorCPI2012Schema <- function () {
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
   SectorCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SectorCPI) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  colnames(SectorCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
   return(SectorCPI)
 }
 Detail_CPI_IO <- adjustBEACPItoIOIndustry2012Schema()[["Detail"]]

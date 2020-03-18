@@ -250,7 +250,7 @@ getIndustryUseofImportedCommodities <- function() {
 #   return(GrossOutput)
 # }
 
-#' Adjust gross output from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
+#' Adjust gross output ($) from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
 #' @return A list contains IO-based gross output at Detail, Summary, and Sector IO levels.
 adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   # Detail
@@ -260,7 +260,7 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
-  DetailGrossOutputIO <- merge(DetailGDPIndustrytoIO, DetailGrossOutput, by = "Industry", all.y = TRUE)
+  DetailGrossOutputIO <- merge(DetailGDPIndustrytoIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry", all.y = TRUE)
   # Convert values to numeric format
   DetailGrossOutputIO[, year_range] <- as.data.frame(apply(DetailGrossOutputIO[, year_range], 2, as.numeric))
   # Aggregate by BEA Detail industry code
@@ -299,6 +299,9 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
 
   # Put GrossOutputIO tables in the GrossOutputIOList
   GrossOutputIOList <- list(DetailGrossOutputIO, SummaryGrossOutputIO, SectorGrossOutputIO)
+  # Convert values from million $ to $
+  GrossOutputIOList <- lapply(GrossOutputIOList, function(x) x*1E6)
+  # Rename elements in list
   names(GrossOutputIOList) <- c("Detail", "Summary", "Sector")
   return(GrossOutputIOList)
 }
@@ -313,7 +316,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
-  DetailCPIIO <- merge(DetailGDPIndustrytoIO, DetailCPI, by = "Industry", all.y = TRUE)
+  DetailCPIIO <- merge(DetailGDPIndustrytoIO, DetailCPI, by = "Gross_Output_Detail_Industry", all.y = TRUE)
   # Convert values to numeric format
   DetailCPIIO[, year_range] <- as.data.frame(apply(DetailCPIIO[, year_range], 2, as.numeric))
   # Adjust (weighted average) CPI based on DetailGrossOutput
@@ -321,7 +324,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   DetailGrossOutput <- getBEADetailGrossOutput2012Schema()
   DetailGrossOutput[, year_range] <- as.data.frame(apply(DetailGrossOutput[, year_range], 2, as.numeric))
   # Merge CPI with GrossOutput
-  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "Industry")
+  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry")
   # Calculate weighted average of CPI
   for (code in unique(DetailCPIIO[, "BEA_2012_Detail_Code"])) {
     for (year in year_range) {
@@ -369,7 +372,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   return(CPIIOList)
 }
 
-#' Adjust Value Added from GDP industries to IO industries (2012 schema) at Summary and Sector IO levels.
+#' Adjust Value Added ($) from GDP industries to IO industries (2012 schema) at Summary and Sector IO levels.
 #' @return A list contains IO-based Value Added at Summary and Sector IO levels.
 adjustBEAValueAddedtoIOIndustry2012Schema <- function () {
   # Summary
@@ -404,6 +407,9 @@ adjustBEAValueAddedtoIOIndustry2012Schema <- function () {
   
   # Put ValueAddedIO tables in the ValueAddedIOList
   ValueAddedIOList <- list(SummaryValueAddedIO, SectorValueAddedIO)
+  # Convert values from million $ to $
+  ValueAddedIOList <- lapply(ValueAddedIOList, function(x) x*1E6)
+  # Rename elements in list
   names(ValueAddedIOList) <- c("Summary", "Sector")
   return(ValueAddedIOList)
 }
