@@ -770,3 +770,23 @@
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
 "State_GOS_2007_2018"
+
+#' State Employment table (2009-2018)
+#' @format A dataframe with 7080 obs. and 13 variables
+#' \describe{
+#'  \item{GeoFips}{text code}
+#'  \item{GeoName}{text code}
+#'  \item{LineCode}{integer}
+#'  \item{2009}{number of employee}
+#'  \item{2010}{number of employee}
+#'  \item{2011}{number of employee}
+#'  \item{2012}{number of employee}
+#'  \item{2013}{number of employee}
+#'  \item{2014}{number of employee}
+#'  \item{2015}{number of employee}
+#'  \item{2016}{number of employee}
+#'  \item{2017}{number of employee}
+#'  \item{2018}{number of employee}
+#' }
+#' @source \url{https://apps.bea.gov/API/signup/index.cfm}
+"State_Employment_2009_2018"
