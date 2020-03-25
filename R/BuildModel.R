@@ -13,9 +13,9 @@ prepareEEIOModel <- function(modelname) {
   if (model$specs$ModelType=="US") {
     model$Commodities <- model$BEA$Commodities
     model$Industries <- model$BEA$Industries
+  } else if (model$specs$ModelType=="State2R") {
+    # Fork for state model here
   }
-  
-  ##Fork for state model here
   
   # Get model$Make, model$Use, model$MakeTransactions, model$UseTransactions, and model$UseValueAdded
   model$Make <- model$BEA$Make
@@ -34,7 +34,12 @@ prepareEEIOModel <- function(modelname) {
   }
   # Get model$CommodityOutput, model$CommodityCPI, model$IndustryOutput, model$IndustryCPI, and model$FinalDemand
   if (model$specs$CommoditybyIndustryType=="Commodity") {
-    model$CommodityOutput <- generateCommodityOutputforYear(model$specs$PrimaryRegionAcronym, IsRoUS = FALSE, model)
+    if (model$specs$PrimaryRegionAcronym=="US") {
+      model$CommodityOutput <- generateCommodityOutputforYear(model$specs$PrimaryRegionAcronym, IsRoUS = FALSE, model)
+    } else {
+      # Add RoUS in CommodityOutput table
+      model$CommodityOutput <- getStateCommodityOutputEstimates(model$specs$PrimaryRegionAcronym)
+    }
     model$CommodityCPI <- generateCommodityCPIforYear(model$specs$IOYear, model) # return a one-column table for IOYear
     # Get model$FinalDemand
     model$FinalDemand <- model$BEA$UseFinalDemand
@@ -44,6 +49,9 @@ prepareEEIOModel <- function(modelname) {
     # Get model$IndustryOutput from GDP tables
     if (model$specs$PrimaryRegionAcronym=="US") {
       model$IndustryOutput <- model$GDP$BEAGrossOutputIO[, as.character(model$specs$IOYear), drop = FALSE]
+    } else {
+      # Add RoUS in IndustryOutput table
+      model$IndustryOutput <- getStateIndustryOutput(model$specs$PrimaryRegionAcronym)
     }
     # Get model$IndustryCPI from GDP tables
     model$IndustryCPI <- model$GDP$BEACPIIO[, as.character(model$specs$IOYear), drop = FALSE]

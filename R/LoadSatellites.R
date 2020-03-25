@@ -97,7 +97,7 @@ loadsattables <- function(model) {
         } else {
           IsRoUS <- FALSE
           #Change label to location
-          if (model$specs$ModelType=="state") {
+          if (model$specs$ModelType=="State2R") {
             sattable_r[, "Location"] <- paste("US-", r, sep = "")
           }
         }
