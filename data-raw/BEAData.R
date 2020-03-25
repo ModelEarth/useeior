@@ -840,11 +840,11 @@ usethis::use_data(State_GOS_2007_2018, overwrite = TRUE)
 getBEAStateEmployment <- function () {
   APIkey <- readLines(rappdirs::user_data_dir("BEA_API_KEY.txt"), warn = FALSE)
   linecodes <- jsonlite::fromJSON(paste("https://apps.bea.gov/api/data/?&UserID=", APIkey,
-                                  "method=GetParameterValuesFiltered",
-                                  "datasetname=Regional",
-                                  "TargetParameter=LineCode",
-                                  "TableName=SAEMP25N",
-                                  "ResultFormat=json", sep = "&"))
+                                        "method=GetParameterValuesFiltered",
+                                        "datasetname=Regional",
+                                        "TargetParameter=LineCode",
+                                        "TableName=SAEMP25N",
+                                        "ResultFormat=json", sep = "&"))
   StateEmployment <- data.frame()
   for (linecode in linecodes$BEAAPI$Results$ParamValue$Key) {
     StateEmployment_linecode <- jsonlite::fromJSON(paste0("https://apps.bea.gov/api/data/?&UserID=", APIkey,
