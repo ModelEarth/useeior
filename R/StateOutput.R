@@ -115,7 +115,6 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
   return(StateTableBEA)
 }
 
-
 # Calculate state-US GDP (value added) ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2018 specifying the year of interest.
 #' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
@@ -151,6 +150,7 @@ getAlternativeStateIndustryOutputEstimates <- function(industry) {
   # 
   # BLS QCEW employment for all states and industries: SI/BLS/QCEW_GA_2012_Static.csv, QCEW_GA_2014_Static.csv
 }
+
 
 #' Estimate state commodity output
 #' @param year Abbreviated location name of the model, e.g. "US" or "GA".

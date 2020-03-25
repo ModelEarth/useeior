@@ -20,6 +20,20 @@ State_CommodityOutput <- getStateCommodityOutputEstimates(year)
 #' 4 - Load US Summary Make table for given year
 US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"))
 
+# prepare allocation factors
+# break mapStateTabletoBEASummary into 3 functions
+
+#' #' 3 - Create VA_state:VA_US ratios for each state for each summary industry.
+#' #'  Multiply US output by this ratio to get initial state industry output estimates
+#' State_IndustryOutput <- getStateIndustryOutput(year)
+
+#' 3 - Load in available state commodity output data for a given year. Use these data to estimate state
+#' commodity output by creating ratios. Estimate initial state commodity output
+State_CommodityOutput <- getStateCommodityOutputEstimates(year)
+
+#' 4 - Load US Summary Make table for given year
+US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"))
+
 #' 5 - Create initial make table for each state. Use standard row/column naming.
 #'  For each state and each industry,apply the state's industry output to divide each value in the state Make table 
 #' along each row by this ratio. Verify the row sums of all tables combined equal national
