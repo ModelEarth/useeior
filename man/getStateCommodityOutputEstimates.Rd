@@ -4,10 +4,10 @@
 \alias{getStateCommodityOutputEstimates}
 \title{Estimate state commodity output}
 \usage{
-getStateCommodityOutputEstimates(location_acronym)
+getStateCommodityOutputEstimates(year)
 }
 \arguments{
-\item{location_acronym}{Abbreviated location name of the model, e.g. "US" or "GA".}
+\item{year}{Abbreviated location name of the model, e.g. "US" or "GA".}
 }
 \value{
 A dataframe contains state commodity output for specified state with row names being BEA sector code.

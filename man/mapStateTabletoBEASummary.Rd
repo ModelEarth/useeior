@@ -2,16 +2,18 @@
 % Please edit documentation in R/StateOutput.R
 \name{mapStateTabletoBEASummary}
 \alias{mapStateTabletoBEASummary}
-\title{Map state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary, apply allocation based on BLS QCEW Employment}
+\title{Map state table to BEA Summary, mark sectors that need allocation}
 \usage{
-mapStateTabletoBEASummary(statetable)
+mapStateTabletoBEASummary(statetablename, year)
 }
 \arguments{
-\item{statetable}{Pre-saved state table (GDP, Tax, Employment Compensation, and GOS).}
+\item{statetablename}{Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.}
+
+\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
 }
 \value{
-A dataframe contains state industry output for specified state with row names being BEA sector code.
+A dataframe contains state value for all states with row names being BEA sector code.
 }
 \description{
-Map state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary, apply allocation based on BLS QCEW Employment
+Map state table to BEA Summary, mark sectors that need allocation
 }

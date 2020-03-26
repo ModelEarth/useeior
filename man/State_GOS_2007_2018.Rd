@@ -4,7 +4,8 @@
 \name{State_GOS_2007_2018}
 \alias{State_GOS_2007_2018}
 \title{State GOS table (2007-2018)}
-\format{A dataframe with 4550 obs. and 15 variables
+\format{
+A dataframe with 4550 obs. and 15 variables
 \describe{
  \item{GeoName}{text code}
  \item{LineCode}{integer}
@@ -21,7 +22,8 @@
  \item{2016}{current year USD}
  \item{2017}{current year USD}
  \item{2018}{current year USD}
-}}
+}
+}
 \source{
 \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
 }
