@@ -4,7 +4,8 @@
 \name{State_Employment_2009_2018}
 \alias{State_Employment_2009_2018}
 \title{State Employment table (2009-2018)}
-\format{A dataframe with 7080 obs. and 13 variables
+\format{
+A dataframe with 7080 obs. and 13 variables
 \describe{
  \item{GeoFips}{text code}
  \item{GeoName}{text code}
@@ -19,7 +20,8 @@
  \item{2016}{number of employee}
  \item{2017}{number of employee}
  \item{2018}{number of employee}
-}}
+}
+}
 \source{
 \url{https://apps.bea.gov/API/signup/index.cfm}
 }
