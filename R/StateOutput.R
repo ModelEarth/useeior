@@ -53,6 +53,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
                                                      BEAStateEmployment$BEA_2012_Summary_Code),
                                            sum)
     colnames(BEAStateEmployment) <- c("GeoFips", "GeoName", "BEA_2012_Summary_Code", "Weight")
+    BEAStateEmployment$GeoFips <- as.numeric(BEAStateEmployment$GeoFips)
     # Use BLS QCEW state Emp data for real estate and gov sectors
     OtherStateEmptoBEAmapping <- crosswalk[crosswalk$BEA_2012_Sector_Code%in%c("FIRE", "G"), ]
     if (year > 2013) {
@@ -63,6 +64,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
       # Assign state name
       fips <- flowsa$common$read_stored_FIPS()
       fips$State <- as.character(fips$State)
+      fips$FIPS <- as.numeric(fips$FIPS)
       OtherStateEmployment <- merge(OtherStateEmployment, fips, by = "FIPS")
     } else {
       # Load pre-saved BLS QCEW Emp data
