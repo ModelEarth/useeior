@@ -94,7 +94,7 @@ calculateOutputRatio <- function (model, output_type="Commodity") {
 #' Generalized RAS procedure. Takes an initial matrix, a target row sum vector
 #' and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
 #' and colsums of matrix equal col sum vector, within a tolerance
-RAS <- function(m0,t_r,t_c, t=0.01) {
+RAS <- function(m0,t_r,t_c, t=0.01, max_itr=1000) {
   m <- m0
   c_r <- rowSums(m0)
   c_c <- colSums(m0)
@@ -102,6 +102,9 @@ RAS <- function(m0,t_r,t_c, t=0.01) {
   col_condition <- all.equal(c_c,t_c,tolerance=t)
   i <- 0
   while(!isTRUE(row_condition) && !isTRUE(col_condition)) {
+    if(i>max_itr){
+      break
+    }
     #Adjust rowwise
     c_r <- rowSums(m)
     c_rr_ratio <- t_r/c_r
