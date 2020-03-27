@@ -24,10 +24,10 @@ mapStateTabletoBEASummary <- function(statetablename, year) {
   return(StateTableBEA)
 }
 
-#' Calculate allocation based on state-level data, such as employment
+#' Calculate allocation factors based on state-level data, such as employment
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
 #' @param year A numeric value between 2007 and 2018 specifying the year of interest.
-#' @return A dataframe contains allocated state value for all states with row names being BEA sector code.
+#' @return A dataframe contains allocation factors for all states with row names being BEA sector code.
 calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsource) {
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
@@ -53,31 +53,28 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
                                                      BEAStateEmployment$BEA_2012_Summary_Code),
                                            sum)
     colnames(BEAStateEmployment) <- c("GeoFips", "GeoName", "BEA_2012_Summary_Code", "Weight")
-    # Use BLS and Census stat emp data for real estate and gov sectors
+    # Use BLS QCEW state Emp data for real estate and gov sectors
     OtherStateEmptoBEAmapping <- crosswalk[crosswalk$BEA_2012_Sector_Code%in%c("FIRE", "G"), ]
-    library(reticulate)
-    flowsa <- import("flowsa")
     if (year > 2013) {
+      library(reticulate)
+      flowsa <- import("flowsa")
       # Load BLS QCEW Emp data from flowsa
       OtherStateEmployment <- flowsa$getFlowByActivity("Employment", list(as.character(year)), "BLS_QCEW_EMP")[, c("FIPS", "ActivityProducedBy", "FlowAmount")]
-    } else {
-      # Load Census CBP Emp data from flowsa
-      OtherStateEmployment <- flowsa$getFlowByActivity("Employment", list(as.character(year)), "Census_CBP_EMP")[, c("FIPS", "ActivityProducedBy", "FlowAmount")]
-      OtherStateEmployment$FlowAmount <- as.numeric(OtherStateEmployment$FlowAmount)
-      # Drop state-level values and aggregate county-level values to state-level
+      # Assign state name
       fips <- flowsa$common$read_stored_FIPS()
       fips$State <- as.character(fips$State)
       OtherStateEmployment <- merge(OtherStateEmployment, fips, by = "FIPS")
-      OtherStateEmployment <- OtherStateEmployment[!is.na(OtherStateEmployment$County), ]
-      # Change FIPS from county-level to state-level
-      OtherStateEmployment$GeoFips <- paste0(substr(OtherStateEmployment$FIPS, 1, 2), "000")
+    } else {
+      # Load pre-saved BLS QCEW Emp data
+      OtherStateEmployment <- get(paste("BLS_QCEW", year, sep = "_"))[, c("GeoFips", "GeoName", "NAICS", "EMP")]
+      colnames(OtherStateEmployment) <- c("FIPS", "State", "ActivityProducedBy", "FlowAmount")
     }
     # Map OtherStateEmployment (from NAICS/ActivityProducedBy, with OtherStateEmptoBEAmapping) to BEA Summary
     OtherStateEmployment <- merge(OtherStateEmployment,
                                   OtherStateEmptoBEAmapping[nchar(OtherStateEmptoBEAmapping$NAICS_2012_Code)==3, ],
                                   by.x = "ActivityProducedBy", by.y = "NAICS_2012_Code")
     OtherStateEmployment <- stats::aggregate(OtherStateEmployment$FlowAmount,
-                                             by = list(OtherStateEmployment$GeoFips,
+                                             by = list(OtherStateEmployment$FIPS,
                                                        OtherStateEmployment$State,
                                                        OtherStateEmployment$BEA_2012_Summary_Code),
                                              sum)
@@ -85,16 +82,21 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
     allocationweight <- rbind(BEAStateEmployment, OtherStateEmployment)
   }
   # Calculate allocation factor
-  allocationweight <- merge(allocationweight, allocation_sectors, by = "BEA_2012_Summary_Code")
-  for (state in unique(allocationweight$GeoName)) {
-    for (linecode in unique(allocationweight$LineCode)) {
-      weight_vector <- allocationweight[allocationweight$GeoName==state&allocationweight$LineCode==linecode, "Weight"]
-      allocationweight[allocationweight$GeoName==state&allocationweight$LineCode==linecode, "AllocationFactor"] <- weight_vector/sum(weight_vector)
+  allocation_df <- merge(allocationweight, allocation_sectors, by = "BEA_2012_Summary_Code")
+  for (state in unique(allocation_df$GeoName)) {
+    for (linecode in unique(allocation_df$LineCode)) {
+      weight_vector <- allocation_df[allocation_df$GeoName==state&allocation_df$LineCode==linecode, "Weight"]
+      allocation_df[allocation_df$GeoName==state&allocation_df$LineCode==linecode, "AllocationFactor"] <- weight_vector/sum(weight_vector)
     }
   }
-  
+  return(allocation_df)
 }
 
+#' Allocate state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary based on specified weight
+#' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param allocationweightsource Source of allocatino weight, can be "Employment".
+#' @return A dataframe contains allocated state value for all states with row names being BEA sector code.
 allocateStateTabletoBEASummary <- function(statetablename, year, allocationweightsource) {
   # Generate StateTableBEA
   StateTableBEA <- mapStateTabletoBEASummary(statetablename, year)
@@ -118,9 +120,9 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
 # Calculate state-US GDP (value added) ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2018 specifying the year of interest.
 #' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
-generateStateUSValueAddedRatios <- function(year) {
+calculateStateUSValueAddedRatio <- function(year) {
   # Generate state GDP (value added) table
-  StateValueAdded <- allocateStateTabletoBEASummary(year, "GDP", "Employment")
+  StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, "Employment")
   # Load US value added table
   USValueAdded <- useeior::Summary_ValueAdded_IO[, as.character(year), drop = FALSE]
   # Merge state GDP and US value added tables
@@ -157,11 +159,41 @@ getAlternativeStateIndustryOutputEstimates <- function(industry) {
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
 getStateCommodityOutputEstimates <- function(year) {
   # Import flowsa
-  library(reticulate)
-  flowsa <- import("flowsa")
-  # Agriculture: pre-saved CoA data
-  CoA <- flowsa$getFlowByActivity("CoA", list(as.character(year)), "USDA_CoA_Cropland")
-  # USFS_ForestCutValue
-  # NOAA_FishLandings
+  #library(reticulate)
+  #flowsa <- import("flowsa")
+  
+  # Agriculture
+  # pre-saved CoA data
+  #CoA <- flowsa$getFlowByActivity("CoA", list(as.character(year)), "USDA_CoA_Cropland")
+  # USDA 2012 Census Report (by BEA)
+  AgOutput <- utils::read.table(system.file("extdata", "USDAStateAgProdMarketValueByBEA.csv", package = "useeior"),
+                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE,
+                                colClasses = c("character",rep("numeric",51)))
+  # Reshape table from wide to long
+  AgOutput <- reshape2::melt(AgOutput, id.vars = "BEA_389")
+  colnames(AgOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
+  
+  # Forestry
+  # read in USDA-FS Forest Product Cut Values data by state (FY2012)
+  ForestOutput <- utils::read.table(system.file("extdata", "ForestProdCutValueFY2012.csv", package = "useeior"),
+                                    sep = ",", header = TRUE, check.names = FALSE, colClasses = c("character", "numeric"))
+  # Add BEA Summary code
+  ForestOutput <- cbind.data.frame("113000", ForestOutput)
+  colnames(ForestOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
+  ForestOutput$Output <- ForestOutput$Output*1E-6
+  
+  # Fishery
+  # read in NOAA Fishery Landings data by state by year (2010-2016)
+  FisheryOutput <- utils::read.table(system.file("extdata", "FisheryLandings2010-2016.csv", package = "useeior"),
+                                     sep = ",", header = TRUE, check.names = FALSE, colClasses = c("numeric", "character", "numeric"))
+  # calculate State/US Fishery Output ratio
+  FisheryOutput <- cbind.data.frame("114000", FisheryOutput[FisheryOutput$Year==year, ])
+  FisheryOutput$Year <- NULL
+  colnames(FisheryOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
+  FisheryOutput$Output <- FisheryOutput$Output*1E-6
+  
+  # Assemble Commodity Output from Agriculture, Forestry and Fishery
+  StateCommodityOutput <- rbind(AgOutput, ForestOutput, FisheryOutput)
+  return(StateCommodityOutput)
 }
 
