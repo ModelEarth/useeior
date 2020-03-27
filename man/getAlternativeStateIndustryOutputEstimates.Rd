@@ -4,10 +4,10 @@
 \alias{getAlternativeStateIndustryOutputEstimates}
 \title{Estimate state output based on alternative sources.}
 \usage{
-getAlternativeStateIndustryOutputEstimates(industry)
+getAlternativeStateIndustryOutputEstimates(year)
 }
 \arguments{
-\item{industry}{A BEA industry name.}
+\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
 }
 \value{
 A dataframe contains state output for all states and a specific industry.

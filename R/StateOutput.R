@@ -119,7 +119,7 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
   return(StateTableBEA)
 }
 
-# Calculate state-US GDP (value added) ratios at BEA Summary level.
+#' Calculate state-US GDP (value added) ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2018 specifying the year of interest.
 #' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
 calculateStateUSValueAddedRatio <- function(year) {
@@ -138,9 +138,9 @@ calculateStateUSValueAddedRatio <- function(year) {
 }
 
 #' Estimate state output based on alternative sources.
-#' @param industry A BEA industry name.
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
 #' @return A dataframe contains state output for all states and a specific industry.
-getAlternativeStateIndustryOutputEstimates <- function(industry) {
+getAlternativeStateIndustryOutputEstimates <- function(year) {
   # Census B. EconomicCensus RCPTotal, No_Establishments, PAYANN, No_Employees for most all sectors:
   # SI/Census/EconomicCensus_2012.csv, mapped to BEA using mapEconomicCensus2012toBEA() function
   #
@@ -157,9 +157,9 @@ getAlternativeStateIndustryOutputEstimates <- function(industry) {
 
 
 #' Estimate state commodity output
-#' @param year Abbreviated location name of the model, e.g. "US" or "GA".
+#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
-getStateCommodityOutputEstimates <- function(year) {
+getAlternativeStateCommodityOutputEstimates <- function(year) {
   # Import flowsa
   #library(reticulate)
   #flowsa <- import("flowsa")
