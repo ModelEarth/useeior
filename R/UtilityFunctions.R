@@ -117,6 +117,7 @@ RAS <- function(m0,t_r,t_c, t=0.01, max_itr=1000) {
     col_condition <- all.equal(c_c,t_c,tolerance=t)
     i<-i+1
   }
+  
   print(paste("RAS converged after",i,"iterations."))
-  #print(m)
+  return(m)
 }
