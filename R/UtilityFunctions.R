@@ -90,3 +90,30 @@ calculateOutputRatio <- function (model, output_type="Commodity") {
   }
   return(ratio_table)
 }
+
+#' Generalized RAS procedure. Takes an initial matrix, a target row sum vector
+#' and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
+#' and colsums of matrix equal col sum vector, within a tolerance
+RAS <- function(m0,t_r,t_c, t=0.01) {
+  m <- m0
+  c_r <- rowSums(m0)
+  c_c <- colSums(m0)
+  row_condition <- all.equal(c_r,t_r,tolerance=t)
+  col_condition <- all.equal(c_c,t_c,tolerance=t)
+  i <- 0
+  while(!isTRUE(row_condition) && !isTRUE(col_condition)) {
+    #Adjust rowwise
+    c_r <- rowSums(m)
+    c_rr_ratio <- t_r/c_r
+    m <- diag(r_ratio) %*% m
+    #Adjust colwise
+    c_c <- colSums(m)
+    c_ratio <- t_c/c_c
+    m <- m %*% diag(c_ratio) 
+    row_condition <- all.equal(c_r,t_r,tolerance=t)
+    col_condition <- all.equal(c_c,t_c,tolerance=t)
+    i<-i+1
+  }
+  print(paste("RAS converged after",i,"iterations."))
+  #print(m)
+}
