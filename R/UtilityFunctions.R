@@ -107,7 +107,7 @@ RAS <- function(m0,t_r,t_c, t=0.01, max_itr=1000) {
     }
     #Adjust rowwise
     c_r <- rowSums(m)
-    c_rr_ratio <- t_r/c_r
+    r_ratio <- t_r/c_r
     m <- diag(r_ratio) %*% m
     #Adjust colwise
     c_c <- colSums(m)
