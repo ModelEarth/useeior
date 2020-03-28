@@ -15,7 +15,7 @@ loadBEAtables <- function(specs) {
   }
 
   # Get BEA sectors by group
-  BEA$Commodities <-getVectorOfCodes("Commodity")
+  BEA$Commodities <- getVectorOfCodes("Commodity")
   BEA$Industries <- getVectorOfCodes("Industry")
   BEA$ValueAddedCodes <- getVectorOfCodes("ValueAdded")
   BEA$CommodityTotalOutputCodes <- getVectorOfCodes("CommodityTotalOutput")

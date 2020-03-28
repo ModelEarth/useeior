@@ -256,7 +256,7 @@ adjustBEAGrossOutouttoIOIndustry2012Schema <- function () {
   # Detail
   DetailGrossOutput <- getBEADetailGrossOutput2012Schema()
   # Determine year range
-  year_range <- colnames(DetailGrossOutput)[2:ncol(DetailGrossOutput)]
+  year_range <- colnames(DetailGrossOutput)[3:ncol(DetailGrossOutput)]
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
@@ -312,7 +312,7 @@ adjustBEACPItoIOIndustry2012Schema <- function () {
   # Detail
   DetailCPI <- getBEADetailCPI2012Schema()
   # Determine year range
-  year_range <- colnames(DetailCPI)[2:ncol(DetailCPI)]
+  year_range <- colnames(DetailCPI)[3:ncol(DetailCPI)]
   # Attach BEA Detail industry code
   DetailGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                              sep = ",", header = TRUE)
@@ -378,7 +378,7 @@ adjustBEAValueAddedtoIOIndustry2012Schema <- function () {
   # Summary
   SummaryValueAdded <- getBEASummaryValueAdded2012Schema()
   # Determine year range
-  year_range <- colnames(SummaryValueAdded)[2:ncol(SummaryValueAdded)]
+  year_range <- colnames(SummaryValueAdded)[3:ncol(SummaryValueAdded)]
   # Attach BEA Detail industry code
   SummaryGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_SummaryGDPIndustrytoIO2012Schema.csv", package = "useeior"),
                                               sep = ",", header = TRUE)
