@@ -7,7 +7,7 @@
 getStateGDP(year)
 }
 \arguments{
-\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
+\item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
 A dataframe contains state GDP for all states at a specific year.

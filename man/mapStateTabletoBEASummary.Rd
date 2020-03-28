@@ -9,7 +9,7 @@ mapStateTabletoBEASummary(statetablename, year)
 \arguments{
 \item{statetablename}{Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.}
 
-\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
+\item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
 A dataframe contains state value for all states with row names being BEA sector code.

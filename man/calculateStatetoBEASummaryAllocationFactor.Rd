@@ -7,7 +7,7 @@
 calculateStatetoBEASummaryAllocationFactor(year, allocationweightsource)
 }
 \arguments{
-\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
+\item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 
 \item{statetablename}{Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.}
 }

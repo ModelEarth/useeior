@@ -7,7 +7,7 @@
 getAlternativeStateCommodityOutputEstimates(year)
 }
 \arguments{
-\item{year}{A numeric value between 2007 and 2018 specifying the year of interest.}
+\item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
 A dataframe contains state commodity output for specified state with row names being BEA sector code.
