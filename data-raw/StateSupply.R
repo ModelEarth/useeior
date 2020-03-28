@@ -2,7 +2,7 @@
 #'Stores table by year .rda files in useeior package
 
 #' 1 - Load in state total value added (VA) by industry for the given year. Map to BEA Summary level
-year <- 2014
+year <- 2013
 state_VA <- getStateGDP(year)
 state_VA_BEA <- mapStateTabletoBEASummary("GDP", year)
 
@@ -17,7 +17,8 @@ StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, allocationweights
 State_CommodityOutput <- getStateCommodityOutputEstimates(year)
 
 #' 4 - Load US Summary Make table for given year
-US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"), as.environment("package:useeior"))
+US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"),
+                       as.environment("package:useeior"))*1E6
 
 #' 5 - Create initial make table for each state. Use standard row/column naming.
 #'  For each state and each industry,apply the state's industry output to divide each value in the state Make table 
@@ -28,7 +29,6 @@ VA_ratio_list <- list()
 State_Summary_MakeTrasaction_list <- list()
 State_Summary_IndustryOutput_list <- list()
 State_Summary_CommodityOutput_list <- list()
-# State_Summary_Make_list <- list()
 for (state in unique(state_US_VA_ratio$GeoName)) {
   # Subset the state_US_VA_ratio for specified state
   VA_ratio <- state_US_VA_ratio[state_US_VA_ratio$GeoName==state, ]
@@ -50,10 +50,6 @@ for (state in unique(state_US_VA_ratio$GeoName)) {
   State_Summary_IndustryOutput_list[[state]] <- US_Summary_IndustryOutput*VA_ratio$Ratio
   # Calculate State_Summary_CommodityOutput by colSumming State_Summary_MakeTrasaction
   State_Summary_CommodityOutput_list[[state]] <- as.data.frame(colSums(State_Summary_MakeTrasaction_list[[state]]))
-  # # Assemble State_Summary_Make
-  # State_Summary_Make_list[[state]] <- rbind(cbind(State_Summary_MakeTrasaction_list[[state]],
-  #                                                 State_Summary_IndustryOutput_list[[state]]),
-  #                                           rbind(State_Summary_CommodityOutput_list[[state]], 0))
 }
 # Verify if row sums of all state Make tables equal to national Make rowsums
 VA_raio_all <- do.call(rbind.data.frame, VA_ratio_list)
@@ -86,6 +82,32 @@ for (state in unique(state_US_VA_ratio$GeoName)) {
 #' 7 - Horizontally stack all state Make trascation tables. Add a function to determine total (all states) commodity output (colsums)
 
 #' 8 - Perform RAS until model is balanced
+m_list <- list()
+for (linecode in c("35", "57", "84", "86")) {
+  # Generate industry output by LineCode by State, a vector/df of 1x50,
+  # calculated by state_US_VA_ratio_LineCode * sum(US industry output Linecode sectors)
+  StateIndustryOutputbyLineCode <- calculateStateIndustryOutputbyLineCode(year)
+  t_c <- StateIndustryOutputbyLineCode[StateIndustryOutputbyLineCode$LineCode==linecode,
+                                       as.character(year)]
+  
+  # Generate another vector of US industry output for the LineCode by BEA Summary
+  # Load State GDP to BEA Summary sector-mapping table
+  BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
+                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  # Determine BEA sectors that need allocation
+  allocation_sectors <- BEAStateGDPtoBEASummary[duplicated(BEAStateGDPtoBEASummary$LineCode)| duplicated(BEAStateGDPtoBEASummary$LineCode, fromLast = TRUE), ]
+  BEA_sectors <- allocation_sectors[allocation_sectors$LineCode==linecode, "BEA_2012_Summary_Code"]
+  t_r <- US_Summary_Make[BEA_sectors, "Total Industry Output"]
+  
+  
+  # Create m0
+  EstimatedStateIndustryOutput <- do.call(cbind, State_Summary_IndustryOutput_list)
+  colnames(EstimatedStateIndustryOutput) <- names(State_Summary_IndustryOutput_list)
+  m0 <- as.matrix(EstimatedStateIndustryOutput[BEA_sectors, ])
+  
+  # Apply RAS balancing
+  m_list[[linecode]] <- RAS(m0, t_r, t_c, t=0.01, max_itr = 1000)
+}
 
 #' 9 - Save balanced table to .rda with use_data
 
