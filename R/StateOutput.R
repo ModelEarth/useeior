@@ -1,5 +1,5 @@
 #' Get industry-level GDP for all states at a specific year.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state GDP for all states at a specific year.
 getStateGDP <- function(year) {
   # Load pre-saved state GDP 2007-2018 
@@ -10,7 +10,7 @@ getStateGDP <- function(year) {
 
 #' Map state table to BEA Summary, mark sectors that need allocation
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state value for all states with row names being BEA sector code.
 mapStateTabletoBEASummary <- function(statetablename, year) {
   if (statetablename=="GDP") {
@@ -26,14 +26,14 @@ mapStateTabletoBEASummary <- function(statetablename, year) {
 
 #' Calculate allocation factors based on state-level data, such as employment
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains allocation factors for all states with row names being BEA sector code.
 calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsource) {
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
                                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
   # Determine BEA sectors that need allocation
-  allocation_sectors <- BEAStateGDPtoBEASummary[duplicated(BEAStateGDPtoBEASummary$LineCode)| duplicated(BEAStateGDPtoBEASummary$LineCode, fromLast = TRUE), ]
+  allocation_sectors <- BEAStateGDPtoBEASummary[duplicated(BEAStateGDPtoBEASummary$LineCode) | duplicated(BEAStateGDPtoBEASummary$LineCode, fromLast = TRUE), ]
   allocation_codes <- allocation_sectors$BEA_2012_Summary_Code
   # Generate a mapping table only for allocation_codes based on MasterCrosswalk2012
   crosswalk <- useeior::MasterCrosswalk2012[useeior::MasterCrosswalk2012$BEA_2012_Summary_Code%in%allocation_codes, ]
@@ -96,7 +96,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
 
 #' Allocate state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary based on specified weight
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @param allocationweightsource Source of allocatino weight, can be "Employment".
 #' @return A dataframe contains allocated state value for all states with row names being BEA sector code.
 allocateStateTabletoBEASummary <- function(statetablename, year, allocationweightsource) {
@@ -120,7 +120,7 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
 }
 
 #' Calculate state-US GDP (value added) ratios at BEA Summary level.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
 calculateStateUSValueAddedRatio <- function(year) {
   # Generate state GDP (value added) table
@@ -137,8 +137,50 @@ calculateStateUSValueAddedRatio <- function(year) {
   return(StateUSValueAdded)
 }
 
+#' Calculate state-US GDP (value added) ratios by BEA State LineCode.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year by BEA State LineCode.
+calculateStateUSVARatiobyLineCode <- function(year) {
+  # Load LineCode-coded State ValueAdded
+  StateValueAdded <- getStateGDP(year)
+  # Aggregate to USValueAdded
+  USValueAdded <- stats::aggregate(StateValueAdded[, as.character(year)], by = list(StateValueAdded$LineCode), sum)
+  colnames(USValueAdded) <- c("LineCode", as.character(year))
+  # MergeLineCode-coded State and US ValueAdded
+  StateUSValueAdded <- merge(StateValueAdded, USValueAdded, by = "LineCode")
+  # Calculate the state-US ValueAdded ratios by LineCode
+  StateUSValueAdded$Ratio <- StateUSValueAdded[, paste0(year, ".x")]/StateUSValueAdded[, paste0(year, ".y")]
+  StateUSValueAdded <- StateUSValueAdded[order(StateUSValueAdded$LineCode, StateUSValueAdded$GeoName),
+                                         c("LineCode", "GeoName", "Ratio")]
+  return(StateUSValueAdded)
+}
+
+#' Calculate state industry output by BEA State LineCode via multiplying state_US_VA_ratio_LineCode by USGrossOutput_LineCode.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A dataframe contains state industry output by BEA State LineCode.
+calculateStateIndustryOutputbyLineCode <- function(year) {
+  # Generate state_US_VA_ratio_LineCode
+  state_US_VA_ratio_LineCode <- calculateStateUSVARatiobyLineCode(year)
+  # Load US Gross Output by LineCode
+  USGrossOutput <- useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE]
+  # Load State GDP to BEA Summary sector-mapping table
+  BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
+                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  # Generate LineCode-coded US Gross Output
+  USGrossOutput <- merge(USGrossOutput, BEAStateGDPtoBEASummary, by.x = 0, by.y = "BEA_2012_Summary_Code")
+  USGrossOutput <- stats::aggregate(USGrossOutput[, as.character(year)], by = list(USGrossOutput$LineCode), sum)
+  colnames(USGrossOutput) <- c("LineCode", as.character(year))
+  # Calculate state industry output by LineCode
+  StateGrossOutput <- merge(state_US_VA_ratio_LineCode, USGrossOutput, by = "LineCode")
+  StateGrossOutput[, as.character(year)] <- StateGrossOutput[, as.character(year)]*StateGrossOutput$Ratio
+  # Re-order
+  StateGrossOutput <- StateGrossOutput[order(StateGrossOutput$LineCode, StateGrossOutput$GeoName),
+                                       c("LineCode", "GeoName", as.character(year))]
+  return(StateGrossOutput)
+}
+
 #' Estimate state output based on alternative sources.
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state output for all states and a specific industry.
 getAlternativeStateIndustryOutputEstimates <- function(year) {
   # Census B. EconomicCensus RCPTotal, No_Establishments, PAYANN, No_Employees for most all sectors:
@@ -157,7 +199,7 @@ getAlternativeStateIndustryOutputEstimates <- function(year) {
 
 
 #' Estimate state commodity output
-#' @param year A numeric value between 2007 and 2018 specifying the year of interest.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
 getAlternativeStateCommodityOutputEstimates <- function(year) {
   # Import flowsa
