@@ -481,8 +481,8 @@ getBEADetailGrossOutput2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
-  DetailGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:422, c(2, 13:24)]
-  colnames(DetailGrossOutput) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  DetailGrossOutput <- readxl::read_excel(FileName, sheet = "GO", col_names = TRUE, skip = 5)[, c(1:2, 13:24)]
+  colnames(DetailGrossOutput)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(DetailGrossOutput)
 }
 #' Get Summary BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
@@ -493,8 +493,8 @@ getBEASummaryGrossOutput2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SummaryGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SummaryGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  SummaryGrossOutput <- readxl::read_excel(FileName, sheet = "GO", col_names = TRUE, skip = 5, n_max = 188)[, c(1:2, 13:24)]
+  colnames(SummaryGrossOutput)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(SummaryGrossOutput)
 }
 #' Get Sector BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
@@ -505,8 +505,8 @@ getBEASectorGrossOutput2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SectorGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SectorGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
+  SectorGrossOutput <- readxl::read_excel(FileName, sheet = "GO", col_names = TRUE, skip = 5, n_max = 188)[, c(1:2, 13:24)]
+  colnames(SectorGrossOutput)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(SectorGrossOutput)
 }
 
@@ -526,32 +526,32 @@ getBEADetailCPI2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
-  DetailCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:422, c(2, 13:24)]
-  colnames(DetailCPI) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  DetailCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes", col_names = TRUE, skip = 5)[, c(1:2, 13:24)]
+  colnames(DetailCPI)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(DetailCPI)
 }
-# Get Summary BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
-
+#' Get Summary BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
+#' 
 #' @return Summary CPI data from downloaded BEA excel file
 getBEASummaryCPI2012Schema <- function () {
   # Download all Underlying tables from BEA iTable
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SummaryCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SummaryCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  SummaryCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes", col_names = TRUE, skip = 5, n_max = 188)[6:197, c(1:2, 13:24)]
+  colnames(SummaryCPI)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(SummaryCPI)
 }
-# Get Sector BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
-
+#' Get Sector BEA U.Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
+#' 
 #' @return Sector CPI data from downloaded BEA excel file
 getBEASectorCPI2012Schema <- function () {
   # Download all Underlying tables from BEA iTable
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SectorCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SectorCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
+  SectorCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes", col_names = TRUE, skip = 5, n_max = 188)[6:197, c(1:2, 13:24)]
+  colnames(SectorCPI)[1:2] <- c("LineCode", "Gross_Output_Industry")
   return(SectorCPI)
 }
 Detail_CPI_IO <- adjustBEACPItoIOIndustry2012Schema()[["Detail"]]
@@ -569,8 +569,8 @@ getBEASummaryValueAdded2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/ValueAddedAnnual.xls"
-  SummaryValueAdded <- readxl::read_excel(FileName, sheet = "VA")[6:197, c(2, 13:24)]
-  colnames(SummaryValueAdded) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "VA"))[5, 13:24])
+  SummaryValueAdded <- readxl::read_excel(FileName, sheet = "VA", col_names = TRUE, skip = 5, n_max = 188)[, c(1:2, 13:24)]
+  colnames(SummaryValueAdded)[1:2] <- c("LineCode", "Industry")
   return(SummaryValueAdded)
 }
 #' Get Sector BEA U.Value Added (2012 schema) 2007-2017 tables from static Excel
@@ -581,8 +581,8 @@ getBEASectorValueAdded2012Schema <- function () {
   getBEAUnderlyingTables()
   # Load desired excel file
   FileName <- "inst/extdata/AllTablesUnderlying/ValueAddedAnnual.xls"
-  SectorValueAdded <- readxl::read_excel(FileName, sheet = "VA")[6:197, c(2, 13:24)]
-  colnames(SectorValueAdded) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "VA"))[5, 13:24])
+  SectorValueAdded <- readxl::read_excel(FileName, sheet = "VA", col_names = TRUE, skip = 5, n_max = 188)[, c(1:2, 13:24)]
+  colnames(SectorValueAdded)[1:2] <- c("LineCode", "Industry")
   return(SectorValueAdded)
 }
 Summary_ValueAdded_IO <- adjustBEAValueAddedtoIOIndustry2012Schema()[["Summary"]]
@@ -816,6 +816,8 @@ getBEAStateData <- function (dataname) {
   StateData <- StateData[!is.na(StateData$LineCode), ]
   # Convert values to numeric
   StateData[, as.character(2007:2018)] <- sapply(StateData[, as.character(2007:2018)], as.numeric)
+  # Replace NA with zero
+  StateData[is.na(StateData)] <- 0
   # Convert values to current US $
   if (unique(StateData$Unit)=="Millions of current dollars") {
     StateData[, as.character(2007:2018)] <- StateData[, as.character(2007:2018)]*1E6
