@@ -37,54 +37,39 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
   allocation_codes <- allocation_sectors$BEA_2012_Summary_Code
   # Generate a mapping table only for allocation_codes based on MasterCrosswalk2012
   crosswalk <- useeior::MasterCrosswalk2012[useeior::MasterCrosswalk2012$BEA_2012_Summary_Code%in%allocation_codes, ]
-  # Load pre-saved data and use it as weight for allocation
+  # Generate allocation_weight df based on pre-saved data
   if (allocationweightsource=="Employment") {
-    # Use BEA state emp for retail sectors (44RT)
-    BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoFips", "GeoName", "LineCode", as.character(year))]
-    # Map BEA state emp (from LineCode) to BEA Summary
+    # Load BEA State Emp to BEA Summary mapping
     BEAStateEmptoBEAmapping <- utils::read.table(system.file("extdata", "Crosswalk_StateEmploymenttoBEASummaryIO2012Schema.csv", package = "useeior"),
                                                  sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
     BEAStateEmptoBEAmapping <- BEAStateEmptoBEAmapping[BEAStateEmptoBEAmapping$BEA_2012_Summary_Code%in%
-                                                         crosswalk[crosswalk$BEA_2012_Sector_Code=="44RT", "BEA_2012_Summary_Code"], ]
-    BEAStateEmployment <- merge(BEAStateEmployment, BEAStateEmptoBEAmapping, by = "LineCode")
-    BEAStateEmployment <- stats::aggregate(BEAStateEmployment[, as.character(year)],
-                                           by = list(BEAStateEmployment$GeoFips,
-                                                     BEAStateEmployment$GeoName,
-                                                     BEAStateEmployment$BEA_2012_Summary_Code),
-                                           sum)
-    colnames(BEAStateEmployment) <- c("GeoFips", "GeoName", "BEA_2012_Summary_Code", "Weight")
-    BEAStateEmployment$GeoFips <- as.numeric(BEAStateEmployment$GeoFips)
-    # Use BLS QCEW state Emp data for real estate and gov sectors
-    OtherStateEmptoBEAmapping <- crosswalk[crosswalk$BEA_2012_Sector_Code%in%c("FIRE", "G"), ]
-    if (year > 2013) {
-      library(reticulate)
-      flowsa <- import("flowsa")
-      # Load BLS QCEW Emp data from flowsa
-      OtherStateEmployment <- flowsa$getFlowByActivity("Employment", list(as.character(year)), "BLS_QCEW_EMP")[, c("FIPS", "ActivityProducedBy", "FlowAmount")]
-      # Assign state name
-      fips <- flowsa$common$read_stored_FIPS()
-      fips$State <- as.character(fips$State)
-      fips$FIPS <- as.numeric(fips$FIPS)
-      OtherStateEmployment <- merge(OtherStateEmployment, fips, by = "FIPS")
-    } else {
-      # Load pre-saved BLS QCEW Emp data
-      OtherStateEmployment <- get(paste("BLS_QCEW", year, sep = "_"))[, c("GeoFips", "GeoName", "NAICS", "EMP")]
-      colnames(OtherStateEmployment) <- c("FIPS", "State", "ActivityProducedBy", "FlowAmount")
+                                                         crosswalk[crosswalk$BEA_2012_Sector_Code%in%c("44RT", "FIRE", "G"), "BEA_2012_Summary_Code"], ]
+    # For real estate (FIRE) and gov (G) sectors, calculate allocation factors using US GDP/Gross Output
+    allocation_factors <- merge(BEAStateEmptoBEAmapping,
+                                useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE],
+                                by.x = "BEA_2012_Summary_Code", by.y = 0)
+    for (linecode in unique(allocation_factors$LineCode)) {
+      weight_vector <- allocation_factors[allocation_factors$LineCode==linecode, as.character(year)]
+      allocation_factors[allocation_factors$LineCode==linecode, "factor"] <- weight_vector/sum(weight_vector)
     }
-    # Map OtherStateEmployment (from NAICS/ActivityProducedBy, with OtherStateEmptoBEAmapping) to BEA Summary
-    OtherStateEmployment <- merge(OtherStateEmployment,
-                                  OtherStateEmptoBEAmapping[nchar(OtherStateEmptoBEAmapping$NAICS_2012_Code)==3, ],
-                                  by.x = "ActivityProducedBy", by.y = "NAICS_2012_Code")
-    OtherStateEmployment <- stats::aggregate(OtherStateEmployment$FlowAmount,
-                                             by = list(OtherStateEmployment$FIPS,
-                                                       OtherStateEmployment$State,
-                                                       OtherStateEmployment$BEA_2012_Summary_Code),
-                                             sum)
-    colnames(OtherStateEmployment) <- colnames(BEAStateEmployment)
-    allocationweight <- rbind(BEAStateEmployment, OtherStateEmployment)
+    # Load BEA state Emp
+    BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoFips", "GeoName", "LineCode", as.character(year))]
+    # Map BEA state Emp (from LineCode) to BEA Summary
+    BEAStateEmployment <- merge(BEAStateEmployment,
+                                allocation_factors[, c("BEA_2012_Summary_Code", "LineCode", "factor")],
+                                by = "LineCode")
+    # Adjust BEA state Emp value based on allocation factor
+    BEAStateEmployment[, as.character(year)] <- BEAStateEmployment[, as.character(year)]*BEAStateEmployment$factor
+    allocation_weight <- stats::aggregate(BEAStateEmployment[, as.character(year)],
+                                          by = list(BEAStateEmployment$GeoFips,
+                                                    BEAStateEmployment$GeoName,
+                                                    BEAStateEmployment$BEA_2012_Summary_Code),
+                                          sum)
+    colnames(allocation_weight) <- c("GeoFips", "GeoName", "BEA_2012_Summary_Code", "Weight")
+    allocation_weight$GeoFips <- as.numeric(allocation_weight$GeoFips)
   }
   # Calculate allocation factor
-  allocation_df <- merge(allocationweight, allocation_sectors, by = "BEA_2012_Summary_Code")
+  allocation_df <- merge(allocation_weight, allocation_sectors, by = "BEA_2012_Summary_Code")
   for (state in unique(allocation_df$GeoName)) {
     for (linecode in unique(allocation_df$LineCode)) {
       weight_vector <- allocation_df[allocation_df$GeoName==state&allocation_df$LineCode==linecode, "Weight"]
@@ -161,7 +146,7 @@ calculateStateUSVARatiobyLineCode <- function(year) {
 calculateStateIndustryOutputbyLineCode <- function(year) {
   # Generate state_US_VA_ratio_LineCode
   state_US_VA_ratio_LineCode <- calculateStateUSVARatiobyLineCode(year)
-  # Load US Gross Output by LineCode
+  # Load US Gross Output
   USGrossOutput <- useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE]
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
@@ -179,29 +164,10 @@ calculateStateIndustryOutputbyLineCode <- function(year) {
   return(StateGrossOutput)
 }
 
-#' Estimate state output based on alternative sources.
-#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state output for all states and a specific industry.
-getAlternativeStateIndustryOutputEstimates <- function(year) {
-  # Census B. EconomicCensus RCPTotal, No_Establishments, PAYANN, No_Employees for most all sectors:
-  # SI/Census/EconomicCensus_2012.csv, mapped to BEA using mapEconomicCensus2012toBEA() function
-  #
-  # BTS RailTransport No employees: SI/BTS/RailTransEmployment_2011.csv
-  #
-  # FederalGov No. of employees (best for industry so may not be needed): SI/FedGov/FedGovEmployment2012.csv
-  # 
-  # Postal service No. of employees: SI/USPS/USPSWorkforce2012.csv
-  # 
-  # Census B. State and Local Gov PAYANN: SI/Census/GovCensus_StateLocal_2012.csv  
-  # 
-  # BLS QCEW employment for all states and industries: SI/BLS/QCEW_GA_2012_Static.csv, QCEW_GA_2014_Static.csv
-}
-
-
 #' Estimate state commodity output
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
-getAlternativeStateCommodityOutputEstimates <- function(year) {
+getStateCommodityOutputEstimates <- function(year) {
   # Import flowsa
   #library(reticulate)
   #flowsa <- import("flowsa")
