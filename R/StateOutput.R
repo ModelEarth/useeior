@@ -110,10 +110,23 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
 calculateStateUSValueAddedRatio <- function(year) {
   # Generate state GDP (value added) table
   StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, "Employment")
+  # Generate sum of state GDP (value added) table
+  StateValueAdded_sum <- stats::aggregate(StateValueAdded[, as.character(year)],
+                                          by = list(StateValueAdded$BEA_2012_Summary_Code),
+                                          sum)
+  colnames(StateValueAdded_sum) <- c("BEA_2012_Summary_Code", "StateVA_sum")
   # Load US value added table
   USValueAdded <- useeior::Summary_ValueAdded_IO[, as.character(year), drop = FALSE]
+  # Merge sum of state GDP with US VA to get VA of Overseas region
+  OverseasValueAdded <- merge(StateValueAdded_sum, USValueAdded,
+                              by.x = "BEA_2012_Summary_Code", by.y = 0)
+  OverseasValueAdded[, paste0(year, ".x")] <- OverseasValueAdded[, as.character(year)] - OverseasValueAdded$StateVA_sum
+  OverseasValueAdded[, paste0(year, ".y")] <- OverseasValueAdded[, as.character(year)]
+  OverseasValueAdded$GeoName <- "Overseas"
   # Merge state GDP and US value added tables
   StateUSValueAdded <- merge(StateValueAdded, USValueAdded, by.x = "BEA_2012_Summary_Code", by.y = 0)
+  # Append Overseas VA to StateUSValueAdded
+  StateUSValueAdded <- rbind(StateUSValueAdded, OverseasValueAdded[, colnames(StateUSValueAdded)])
   # Calculate the state-US GDP (value added) ratios
   StateUSValueAdded$Ratio <- StateUSValueAdded[, paste0(year, ".x")]/StateUSValueAdded[, paste0(year, ".y")]
   StateUSValueAdded <- StateUSValueAdded[order(StateUSValueAdded$GeoName, StateUSValueAdded$BEA_2012_Summary_Code),
@@ -128,9 +141,21 @@ calculateStateUSValueAddedRatio <- function(year) {
 calculateStateUSVARatiobyLineCode <- function(year) {
   # Load LineCode-coded State ValueAdded
   StateValueAdded <- getStateGDP(year)
-  # Aggregate to USValueAdded
-  USValueAdded <- stats::aggregate(StateValueAdded[, as.character(year)], by = list(StateValueAdded$LineCode), sum)
-  colnames(USValueAdded) <- c("LineCode", as.character(year))
+  # Generate sum of State ValueAdded table
+  StateValueAdded_sum <- stats::aggregate(StateValueAdded[, as.character(year)], by = list(StateValueAdded$LineCode), sum)
+  colnames(StateValueAdded_sum) <- c("LineCode", as.character(year))
+  # Load US ValueAdded from state GDP table
+  GDPtable <- utils::read.table("inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2018.csv", sep = ",",
+                                header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
+  USValueAdded <- GDPtable[GDPtable$GeoName=="United States *", c("LineCode", as.character(year))]
+  # Convert values to numeric and to US $
+  USValueAdded[, as.character(year)] <- as.numeric(USValueAdded[, as.character(year)])*1E6
+  # Merge sum of state GDP with US VA to get VA of Overseas region
+  OverseasValueAdded <- merge(StateValueAdded_sum, USValueAdded, by = "LineCode")
+  OverseasValueAdded[, as.character(year)] <- OverseasValueAdded[, paste0(year, ".y")] - OverseasValueAdded[, paste0(year, ".x")]
+  OverseasValueAdded$GeoName <- "Overseas"
+  # Append Overseas VA to StateUSValueAdded
+  StateValueAdded <- rbind(StateValueAdded, OverseasValueAdded[, colnames(StateValueAdded)])
   # MergeLineCode-coded State and US ValueAdded
   StateUSValueAdded <- merge(StateValueAdded, USValueAdded, by = "LineCode")
   # Calculate the state-US ValueAdded ratios by LineCode
