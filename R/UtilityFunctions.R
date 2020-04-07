@@ -94,30 +94,32 @@ calculateOutputRatio <- function (model, output_type="Commodity") {
 #' Generalized RAS procedure. Takes an initial matrix, a target row sum vector
 #' and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
 #' and colsums of matrix equal col sum vector, within a tolerance
-RAS <- function(m0, t_r, t_c, t = 0.01, max_itr = 1000) {
+RAS <- function(m0, t_r, t_c, t, max_itr = 1E8) {
   m <- m0
-  c_r <- rowSums(m0)
-  c_c <- colSums(m0)
+  c_r <- as.vector(rowSums(m0))
+  c_c <- as.vector(colSums(m0))
+  # Check row and column conditions
   row_condition <- all.equal(c_r, t_r, tolerance = t)
   col_condition <- all.equal(c_c, t_c, tolerance = t)
   i <- 0
-  while(!isTRUE(row_condition) && !isTRUE(col_condition)) {
+  while(!isTRUE(row_condition) | !isTRUE(col_condition)) {
     if(i>max_itr){
       break
     }
     # Adjust rowwise
-    c_r <- rowSums(m)
+    c_r <- as.vector(rowSums(m))
     r_ratio <- t_r/c_r
     m <- diag(r_ratio) %*% m
     # Adjust colwise
-    c_c <- colSums(m)
+    c_c <- as.vector(colSums(m))
     c_ratio <- t_c/c_c
-    m <- m %*% diag(c_ratio) 
+    m <- m %*% diag(c_ratio)
+    # Check row and column conditions
     row_condition <- all.equal(c_r, t_r, tolerance = t)
     col_condition <- all.equal(c_c, t_c, tolerance = t)
     i<-i+1
   }
   dimnames(m) <- dimnames(m0)
-  print(paste("RAS converged after", i, "iterations."))
+  print(paste("RAS converged after", i-1, "iterations."))
   return(m)
 }
