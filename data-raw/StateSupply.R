@@ -40,7 +40,9 @@ US_Summary_MakeTrasaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="
                                              -which(colnames(US_Summary_Make)=="Total Industry Output")]
 # Sum US_Summary_MakeTrasaction to get US_Summary_IndustryOutput
 US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTrasaction)
-for (state in state.name) {
+VA_ratio_list <- list()
+State_Summary_IndustryOutput_list <- list()
+for (state in c(unique(state_US_VA_ratio$GeoName), "Overseas")) {
   # Subset the state_US_VA_ratio for specified state
   VA_ratio <- state_US_VA_ratio[state_US_VA_ratio$GeoName==state, ]
   # Replace NA with zero
@@ -48,9 +50,16 @@ for (state in state.name) {
   # Re-order state_US_VA_ratio
   rownames(VA_ratio) <- VA_ratio$BEA_2012_Summary_Code
   VA_ratio <- VA_ratio[rownames(US_Summary_MakeTrasaction), ]
+  VA_ratio_list[[state]] <- VA_ratio[, "Ratio", drop = FALSE]
   # Calculate State_Summary_IndustryOutput by multiplying US_Summary_IndustryOutput with VA_ratio
   State_Summary_IndustryOutput_list[[state]] <- US_Summary_IndustryOutput*VA_ratio$Ratio
 }
+# Verify if row sums of all state Make tables equal to national Make rowsums
+VA_raio_all <- do.call(rbind.data.frame, VA_ratio_list)
+VA_ratio_sum <- as.data.frame(round(rowSums(do.call(cbind.data.frame, lapply(VA_ratio_list, rowSums))), 2))
+IndustryOutput_StateSum <- as.data.frame(round(rowSums(do.call(cbind.data.frame, State_Summary_IndustryOutput_list)), 0))
+IndustryOutput_diff <- IndustryOutput_StateSum - US_Summary_IndustryOutput
+colnames(IndustryOutput_diff) <- "StateSum - US"
 
 #' Apply RAS balancing method to adjust VA_ratio of the disaggregated sectors (retail, real estate, gov)
 m0_list <- list()
@@ -69,7 +78,14 @@ for (linecode in c("35", "57", "84", "86")) {
   # Determine BEA sectors that need allocation
   allocation_sectors <- BEAStateGDPtoBEASummary[duplicated(BEAStateGDPtoBEASummary$LineCode)| duplicated(BEAStateGDPtoBEASummary$LineCode, fromLast = TRUE), ]
   BEA_sectors <- allocation_sectors[allocation_sectors$LineCode==linecode, "BEA_2012_Summary_Code"]
-  t_r <- US_Summary_Make[BEA_sectors, "Total Industry Output"]
+  t_r <- as.data.frame(US_Summary_IndustryOutput)[BEA_sectors, ]
+  
+  # Adjust t_c/t_r, make sum(t_c)==sum(t_r)
+  if (sum(t_c) > sum(t_r)) {
+    t_r <- (t_r/sum(t_r))*sum(t_c)
+  } else {
+    t_c <- (t_c/sum(t_c))*sum(t_r)
+  }
   
   # Create m0
   EstimatedStateIndustryOutput <- do.call(cbind, State_Summary_IndustryOutput_list)
