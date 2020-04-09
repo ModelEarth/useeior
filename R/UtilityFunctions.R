@@ -91,6 +91,18 @@ calculateOutputRatio <- function (model, output_type="Commodity") {
   return(ratio_table)
 }
 
+#' Calculate tolerance for RAS function
+ToleranceforRAS <- function(t_r, t_c, relative_diff = NULL, absolute_diff = NULL) {
+  if (!is.null(relative_diff)) {
+    t <- relative_diff
+  } else if (!is.null(absolute_diff)) {
+    t <- absolute_diff/max(abs(t_c), abs(t_r))
+  } else {
+    stop("Set relative_diff or absolute_diff first.")
+  }
+  return(t)
+}
+
 #' Generalized RAS procedure. Takes an initial matrix, a target row sum vector
 #' and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
 #' and colsums of matrix equal col sum vector, within a tolerance
