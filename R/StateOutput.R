@@ -189,46 +189,55 @@ calculateStateIndustryOutputbyLineCode <- function(year) {
   return(StateGrossOutput)
 }
 
-#' Estimate state commodity output
+#' Estimate state commodity output ratios
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
-getStateCommodityOutputEstimates <- function(year) {
+getStateCommodityOutputRatioEstimates <- function(year) {
   # Import flowsa
   #library(reticulate)
   #flowsa <- import("flowsa")
   
-  # Agriculture
+  # Agriculture (111CA)
   # pre-saved CoA data
   #CoA <- flowsa$getFlowByActivity("CoA", list(as.character(year)), "USDA_CoA_Cropland")
-  # USDA 2012 Census Report (by BEA)
+  # Load USDA 2012 Census Report (by BEA)
   AgOutput <- utils::read.table(system.file("extdata", "USDAStateAgProdMarketValueByBEA.csv", package = "useeior"),
                                 sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE,
                                 colClasses = c("character",rep("numeric",51)))
+  # Map to BEA Summary then aggregate
+  AgOutput <- merge(AgOutput, unique(useeior::MasterCrosswalk2012[, c("BEA_2012_Detail_Code", "BEA_2012_Summary_Code")]),
+                    by.x = "BEA_389", by.y = "BEA_2012_Detail_Code")
+  AgOutput <- stats::aggregate(AgOutput[, c("United States", state.name)],
+                               by = list(AgOutput$BEA_2012_Summary_Code), sum, na.rm = TRUE)
+  colnames(AgOutput)[1] <- "BEA_2012_Summary_Code"
+  # Calculate state/US Ag output ratio
+  AgOutput[, state.name] <- AgOutput[, state.name]/AgOutput[, "United States"]
   # Reshape table from wide to long
-  AgOutput <- reshape2::melt(AgOutput, id.vars = "BEA_389")
-  colnames(AgOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
+  AgOutput <- reshape2::melt(AgOutput[, c("BEA_2012_Summary_Code", state.name)], id.vars = "BEA_2012_Summary_Code")
+  colnames(AgOutput) <- c("BEA_2012_Summary_Code", "GeoName", "OutputRatio")
   
-  # Forestry
-  # read in USDA-FS Forest Product Cut Values data by state (FY2012)
+  # Forestry & Fishery (113FF)
+  # Load USDA-FS Forest Product Cut Values data by state (FY2012)
   ForestOutput <- utils::read.table(system.file("extdata", "ForestProdCutValueFY2012.csv", package = "useeior"),
                                     sep = ",", header = TRUE, check.names = FALSE, colClasses = c("character", "numeric"))
-  # Add BEA Summary code
-  ForestOutput <- cbind.data.frame("113000", ForestOutput)
-  colnames(ForestOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
-  ForestOutput$Output <- ForestOutput$Output*1E-6
-  
-  # Fishery
-  # read in NOAA Fishery Landings data by state by year (2010-2016)
+  # Load NOAA Fishery Landings data by state by year (2010-2016)
   FisheryOutput <- utils::read.table(system.file("extdata", "FisheryLandings2010-2016.csv", package = "useeior"),
                                      sep = ",", header = TRUE, check.names = FALSE, colClasses = c("numeric", "character", "numeric"))
-  # calculate State/US Fishery Output ratio
-  FisheryOutput <- cbind.data.frame("114000", FisheryOutput[FisheryOutput$Year==year, ])
-  FisheryOutput$Year <- NULL
-  colnames(FisheryOutput) <- c("BEA_2012_Detail_Code", "GeoName", "Output")
-  FisheryOutput$Output <- FisheryOutput$Output*1E-6
+  FisheryOutput <- FisheryOutput[FisheryOutput$Year==year, ]
+  # Combine Forestry & Forestry
+  ForestryandFishery <- merge(ForestOutput[ForestOutput$State%in%state.name, ],
+                              FisheryOutput[FisheryOutput$State%in%state.name, ],
+                              by = "State", all = TRUE)
+  ForestryandFishery[is.na(ForestryandFishery)] <- 0
+  ForestryandFishery$Output <- ForestryandFishery$CutValue + ForestryandFishery$LandingsValue
+  # Calculate state/US Forestry & Forestry output ratio
+  ForestryandFishery$OutputRatio <- ForestryandFishery$Output/sum(ForestryandFishery$Output)
+  # Add BEA sector code
+  ForestryandFishery <- cbind.data.frame("113FF", ForestryandFishery[, c("State", "OutputRatio")])
+  colnames(ForestryandFishery) <- c("BEA_2012_Summary_Code", "GeoName", "OutputRatio")
   
   # Assemble Commodity Output from Agriculture, Forestry and Fishery
-  StateCommodityOutput <- rbind(AgOutput, ForestOutput, FisheryOutput)
-  return(StateCommodityOutput)
+  StateCommodityOutputRatio <- rbind(AgOutput, ForestryandFishery)
+  return(StateCommodityOutputRatio)
 }
 
