@@ -91,7 +91,8 @@ calculateOutputRatio <- function (model, output_type="Commodity") {
   return(ratio_table)
 }
 
-#' Calculate tolerance for RAS function
+#' Calculate tolerance for RAS. Takes a target row sum vector and target colsum vector.
+#' Specify either relative difference or absolute difference .
 ToleranceforRAS <- function(t_r, t_c, relative_diff = NULL, absolute_diff = NULL) {
   if (!is.null(relative_diff)) {
     t <- relative_diff
@@ -104,8 +105,8 @@ ToleranceforRAS <- function(t_r, t_c, relative_diff = NULL, absolute_diff = NULL
 }
 
 #' Generalized RAS procedure. Takes an initial matrix, a target row sum vector
-#' and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
-#' and colsums of matrix equal col sum vector, within a tolerance
+#' and target colsum vector. Iterates until all row sums of matrix equal to target row sum vector
+#' and colsums of matrix equal target col sum vector, within a tolerance.
 RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
   m <- m0
   c_r <- as.vector(rowSums(m0))
@@ -120,10 +121,14 @@ RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
     }
     # Adjust rowwise
     c_r <- as.vector(rowSums(m))
+    # Replace 0 with 1 in c_r
+    c_r[c_r==0] <- 1
     r_ratio <- t_r/c_r
     m <- m * matrix(r_ratio, nrow(m), ncol(m))
     # Adjust colwise
     c_c <- as.vector(colSums(m))
+    # Replace 0 with 1 in c_c
+    c_c[c_c==0] <- 1
     c_ratio <- t_c/c_c
     m <- m * matrix(c_ratio, nrow(m), ncol(m), byrow = TRUE)
     # Check row and column conditions
@@ -135,3 +140,4 @@ RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
   print(paste("RAS converged after", i, "iterations."))
   return(m)
 }
+
