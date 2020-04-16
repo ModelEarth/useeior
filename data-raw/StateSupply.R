@@ -174,3 +174,16 @@ t_c <- as.numeric(colSums(US_Summary_MakeTrasaction))
 t <- ToleranceforRAS(t_r, t_c, NULL, 1E6)
 m <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
 
+#' 9 - Generae MarketShare matrix for US and each state
+# US MS
+US_Summary_MarketShare <- normalizeIOTransactions(US_Summary_MakeTrasaction, US_Summary_CommodityOutput)
+# State MS
+State_Summary_MarketShare_list <- list()
+for (state in states) {
+  StateMS <- normalizeIOTransactions(State_Summary_MakeTrasaction_list[[state]],
+                                     State_Summary_CommodityOutput_list[[state]])
+  State_Summary_MarketShare_list[[state]] <- cbind.data.frame(rownames(StateMS), StateMS)
+  colnames(State_Summary_MarketShare_list[[state]])[1] <- ""
+}
+
+#' 10 - Save balanced table to .rda with use_data
