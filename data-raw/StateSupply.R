@@ -106,8 +106,8 @@ for (state in states) {
   rownames(VA_ratio) <- VA_ratio$BEA_2012_Summary_Code
   VA_ratio <- VA_ratio[rownames(US_Summary_MakeTrasaction), ]
   # Calculate State_Summary_MakeTrasaction by multiplying US_Summary_MakeTrasaction with VA_ratio
-  VA_ratio_matrix <- matrix(VA_ratio$Ratio, nrow(US_Summary_MakeTrasaction), ncol(US_Summary_MakeTrasaction))
-  State_Summary_MakeTrasaction_list[[state]] <- as.matrix(US_Summary_MakeTrasaction * VA_ratio_matrix)
+  State_Summary_MakeTrasaction_list[[state]] <- diag(VA_ratio$Ratio, names = TRUE) %*% as.matrix(US_Summary_MakeTrasaction)
+  rownames(State_Summary_MakeTrasaction_list[[state]]) <- rownames(US_Summary_MakeTrasaction)
   # Calculate State_Summary_IndustryOutput by multiplying US_Summary_IndustryOutput with VA_ratio
   State_Summary_IndustryOutput_list[[state]] <- US_Summary_IndustryOutput*VA_ratio$Ratio
   # Calculate State_Summary_CommodityOutput by colSumming State_Summary_MakeTrasaction
@@ -185,5 +185,7 @@ for (state in states) {
   State_Summary_MarketShare_list[[state]] <- cbind.data.frame(rownames(StateMS), StateMS)
   colnames(State_Summary_MarketShare_list[[state]])[1] <- ""
 }
+writexl::write_xlsx(State_Summary_MarketShare_list, "StateMarketShare.xlsx")
+
 
 #' 10 - Save balanced table to .rda with use_data

@@ -124,13 +124,13 @@ RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
     # Replace 0 with 1 in c_r
     c_r[c_r==0] <- 1
     r_ratio <- t_r/c_r
-    m <- m * matrix(r_ratio, nrow(m), ncol(m))
+    m <- diag(r_ratio) %*% m
     # Adjust colwise
     c_c <- as.vector(colSums(m))
     # Replace 0 with 1 in c_c
     c_c[c_c==0] <- 1
     c_ratio <- t_c/c_c
-    m <- m * matrix(c_ratio, nrow(m), ncol(m), byrow = TRUE)
+    m <- m %*% diag(c_ratio)
     # Check row and column conditions
     row_condition <- all.equal(t_r, c_r, tolerance = t)
     col_condition <- all.equal(t_c, c_c, tolerance = t)
@@ -140,4 +140,5 @@ RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
   print(paste("RAS converged after", i, "iterations."))
   return(m)
 }
+
 
