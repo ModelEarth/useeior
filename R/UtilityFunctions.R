@@ -141,4 +141,17 @@ RAS <- function(m0, t_r, t_c, t, max_itr = 1E6) {
   return(m)
 }
 
-
+#' Compare two matrices, calculate percentage difference (m1-m2)/m1.
+#' Dimensions of the two matrices must be the same.
+compareMatrices <- function(m1, m2, percentage_diff = FALSE) {
+  if (dim(m1)!=dim(m2)) {
+    stop("Make m1 and m2 have the same dimensions first.")
+  }
+  if (percentage_diff) {
+    m <- (m1-m2)/m1
+  } else {
+    m <- m1-m2
+  }
+  m[is.na(m)] <- 0
+  return(m)
+}

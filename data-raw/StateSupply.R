@@ -187,5 +187,11 @@ for (state in states) {
 }
 writexl::write_xlsx(State_Summary_MarketShare_list, "StateMarketShare.xlsx")
 
+# Compare state MS to US MS
+State_US_MS_Comparison_list <- list()
+for (state in states) {
+  State_US_MS_Comparison_list[[state]] <- compareMatrices(US_Summary_MarketShare,
+                                                          State_Summary_MarketShare_list[[state]])
+}
 
 #' 10 - Save balanced table to .rda with use_data
