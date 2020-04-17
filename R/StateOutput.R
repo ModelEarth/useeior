@@ -44,9 +44,9 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
                                                  sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
     BEAStateEmptoBEAmapping <- BEAStateEmptoBEAmapping[BEAStateEmptoBEAmapping$BEA_2012_Summary_Code%in%
                                                          crosswalk[crosswalk$BEA_2012_Sector_Code%in%c("44RT", "FIRE", "G"), "BEA_2012_Summary_Code"], ]
-    # For real estate (FIRE) and gov (G) sectors, calculate allocation factors using US GDP/Gross Output
+    # For real estate (FIRE) and gov (G) sectors, calculate allocation factors using US GDP by industry
     allocation_factors <- merge(BEAStateEmptoBEAmapping,
-                                useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE],
+                                useeior::Summary_ValueAdded_IO[, as.character(year), drop = FALSE],
                                 by.x = "BEA_2012_Summary_Code", by.y = 0)
     for (linecode in unique(allocation_factors$LineCode)) {
       weight_vector <- allocation_factors[allocation_factors$LineCode==linecode, as.character(year)]
