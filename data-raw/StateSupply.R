@@ -7,7 +7,7 @@ year <- 2012
 state_VA <- getStateGDP(year)
 state_VA_BEA <- mapStateTabletoBEASummary("GDP", year)
 
-#' 2 - Where VA must be allocated from a LineCode toBEA Summary industries,
+#' 2 - Where VA must be allocated from a LineCode to BEA Summary industries,
 #' calculate allocation factors using specified allocationweightsource.
 #' When using state employment (from BEA) as source for allocation,
 #' introduce national GDP to disaggregate state employment in real estate and gov industries
@@ -16,28 +16,23 @@ AllocationFactors <- calculateStatetoBEASummaryAllocationFactor(year, allocation
 StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, allocationweightsource = "Employment")
 
 #' 3 - Load US Summary Make table for given year
+#' Generate US Summary Make Transaction and Industry and Commodity Output
 US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"), as.environment("package:useeior"))*1E6
+US_Summary_MakeTrasaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
+                                             -which(colnames(US_Summary_Make)=="Total Industry Output")]
+US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTrasaction)
+US_Summary_CommodityOutput <- colSums(US_Summary_MakeTrasaction)
 
 #' 4 - Calculate state_US_VA_ratio, for each state and each industry, divide state VA by US VA.
-#' Create initial Make table for each state. Use standard row/column naming.
-#' For each state and each industry, multiply each value in the Make table row-wise
-#' by state_US_VA_ratio.
-#' Verify the row sums of all tables combined equal national Make rowsum.
-#' If not, apply RAS balancing to adjust state_US_VA_ratio.
-#' Create state commodity output by applying colSums to state Make table.
+#' For each state, estimate industry output based on US industry output and state_US_VA_ratio.
+#' For industries whose state_US_VA_ratio were calculated based on disaggregated state VA,
+#' apply RAS balancing to adjust state industry output and state_US_VA_ratio.
+#' Use the adjusted state_US_VA_ratio to calculate state make transaction, industry and commodity output.
 
 # Calculate state_US_VA_ratio
 state_US_VA_ratio <- calculateStateUSValueAddedRatio(year)
 # Generate list of states
 states <- unique(state_US_VA_ratio$GeoName)
-# Extract US_Summary_MakeTrasaction
-US_Summary_MakeTrasaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
-                                             -which(colnames(US_Summary_Make)=="Total Industry Output")]
-# Sum US_Summary_MakeTrasaction by row to get US_Summary_IndustryOutput
-US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTrasaction)
-# Sum US_Summary_MakeTrasaction by column to get US_Summary_CommodityOutput
-US_Summary_CommodityOutput <- colSums(US_Summary_MakeTrasaction)
-# Estimate State_Summary_IndustryOutput 
 State_Summary_IndustryOutput_list <- list()
 for (state in c(states, "Overseas")) {
   # Subset the state_US_VA_ratio for specified state
@@ -75,7 +70,7 @@ for (linecode in c("35", "57", "84", "86")) {
     t_c <- (t_c/sum(t_c))*sum(t_r)
   }
   # Create m0
-  EstimatedStateIndustryOutput <- do.call(cbind, State_Summary_IndustryOutput_list)
+  EstimatedStateIndustryOutput <- do.call(cbind.data.frame, State_Summary_IndustryOutput_list)
   colnames(EstimatedStateIndustryOutput) <- names(State_Summary_IndustryOutput_list)
   m0 <- as.matrix(EstimatedStateIndustryOutput[BEA_sectors, ])
   # Apply RAS balancing
@@ -121,10 +116,10 @@ for (state in states) {
 #' Use these data to estimate state-US commodity output ratios.
 StateCommodityOutputRatioAlternative <- getStateCommodityOutputRatioEstimates(year)
 
-#' 6 - Adjust estimated state commodity output and calculcate state commodity
+#' 6 - Adjust estimated state commodity output and calculcate state commodity adjustment ratio
 #' Based on reported state commodity output from alternative sources.
-#' Adjust estimated state commodity output
 for (state in states) {
+  #' Adjust estimated state commodity output
   # Calculate state/US commodit output ratio * US Summary Comm Output
   AdjustedCommodityOutput <- merge(US_Summary_CommodityOutput,
                                    StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$GeoName==state, ],
@@ -133,31 +128,19 @@ for (state in states) {
   # Replace commodity output value in State_Summary_CommodityOutput_list
   commodities <- AdjustedCommodityOutput$Row.names
   State_Summary_CommodityOutput_list[[state]][commodities, ] <- AdjustedCommodityOutput[AdjustedCommodityOutput$Row.names%in%commodities, "Output"]
-}
-
-#' Calculate state commodity adjustment ratio.
-#' Divide current state commodity output ratio by state commodity output ratio from alternative sources.
-State_Summary_CommodityAdjustmentRatio_list <- list()
-for (state in states) {
+  #' Calculate state commodity adjustment ratio.
+  #' Divide current state commodity output ratio by state commodity output ratio from alternative sources.
   # Merge two sets of state-US commodity output ratio
   commodity_ratios <- merge(State_Summary_CommodityOutputRatio_list[[state]],
                             StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$GeoName==state, ],
                             by.x = 0, by.y = "BEA_2012_Summary_Code", all.x = TRUE)
   # Replace NA in OutputRatio.y with values in OutputRatio.x
   commodity_ratios[is.na(commodity_ratios$OutputRatio.y), "OutputRatio.y"] <- commodity_ratios[is.na(commodity_ratios$OutputRatio.y), "OutputRatio.x"]
-  # Calculate state commodity adjustment ratio
-  State_Summary_CommodityAdjustmentRatio_list[[state]] <- t(commodity_ratios$OutputRatio.y/commodity_ratios$OutputRatio.x)
-  colnames(State_Summary_CommodityAdjustmentRatio_list[[state]]) <- rownames(State_Summary_CommodityOutputRatio_list[[state]])
+  # Adjust state Make transactions based on commodity ratios
+  State_Summary_MakeTrasaction_list[[state]] <- State_Summary_MakeTrasaction_list[[state]]%*%diag(commodity_ratios$OutputRatio.y/commodity_ratios$OutputRatio.x)
 }
 
-#' 7 - Adjust state Make transactions based on State_Summary_CommodityAdjustmentRatio_list
-for (state in states) {
-  adjustment_matrix <- matrix(State_Summary_CommodityAdjustmentRatio_list[[state]],
-                              nrow(State_Summary_MakeTrasaction_list[[state]]),
-                              ncol(State_Summary_MakeTrasaction_list[[state]]), byrow = TRUE)
-  State_Summary_MakeTrasaction_list[[state]] <- State_Summary_MakeTrasaction_list[[state]]*adjustment_matrix
-}
-#' Vertically stack all state Make trascation tables.
+#' 7 - Vertically stack all state Make trascation tables.
 State_Summary_MakeTrasaction <- do.call(rbind, State_Summary_MakeTrasaction_list)
 rownames(State_Summary_MakeTrasaction) <- paste(rep(names(State_Summary_MakeTrasaction_list),
                                                     each = nrow(State_Summary_MakeTrasaction_list[[1]])),
@@ -165,12 +148,17 @@ rownames(State_Summary_MakeTrasaction) <- paste(rep(names(State_Summary_MakeTras
                                                     time = length(names(State_Summary_MakeTrasaction_list))),
                                                 sep = ".")
 
-
 #' 8 - Perform RAS until model is balanced
 #' Apply RAS balancing to the entire Make table
 m0 <- State_Summary_MakeTrasaction
 t_r <- as.numeric(unlist(State_Summary_IndustryOutput_list))
 t_c <- as.numeric(colSums(US_Summary_MakeTrasaction))
+# Adjust t_c/t_r, make sum(t_c)==sum(t_r)
+if (sum(t_c) > sum(t_r)) {
+  t_r <- (t_r/sum(t_r))*sum(t_c)
+} else {
+  t_c <- (t_c/sum(t_c))*sum(t_r)
+}
 t <- ToleranceforRAS(t_r, t_c, NULL, 1E6)
 m <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
 
@@ -182,10 +170,11 @@ State_Summary_MarketShare_list <- list()
 for (state in states) {
   StateMS <- normalizeIOTransactions(State_Summary_MakeTrasaction_list[[state]],
                                      State_Summary_CommodityOutput_list[[state]])
+  # print(paste(state, max(StateMS)))
+  # print(paste(state, min(StateMS)))
   State_Summary_MarketShare_list[[state]] <- cbind.data.frame(rownames(StateMS), StateMS)
   colnames(State_Summary_MarketShare_list[[state]])[1] <- ""
 }
-writexl::write_xlsx(State_Summary_MarketShare_list, "StateMarketShare.xlsx")
 
 # Compare state MS to US MS
 State_US_MS_Comparison_list <- list()
