@@ -5,7 +5,7 @@
 \alias{State_Employment_2009_2018}
 \title{State Employment table (2009-2018)}
 \format{
-A dataframe with 7080 obs. and 13 variables
+A data frame with 7080 obs. and 13 variables
 \describe{
  \item{GeoFips}{text code}
  \item{GeoName}{text code}

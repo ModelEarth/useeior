@@ -5,7 +5,7 @@
 \alias{Summary_Margins_2012_BeforeRedef}
 \title{Summary Margins (Before Redef) table for 2012 (2012 schema)}
 \format{
-A dataframe with 4632 obs. and 9 variables:
+A data frame with 4632 obs. and 9 variables:
 \describe{
  \item{NIPACode}{text code}
  \item{MarginsCategory}{text category name, like 'Therapeutic medical equipment'}

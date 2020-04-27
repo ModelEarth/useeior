@@ -3,13 +3,13 @@
 \name{RAS}
 \alias{RAS}
 \title{Generalized RAS procedure. Takes an initial matrix, a target row sum vector
-and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
-and colsums of matrix equal col sum vector, within a tolerance}
+and target colsum vector. Iterates until all row sums of matrix equal to target row sum vector
+and colsums of matrix equal target col sum vector, within a tolerance.}
 \usage{
-RAS(m0, t_r, t_c, t = 0.01, max_itr = 1000)
+RAS(m0, t_r, t_c, t, max_itr = 1e+06)
 }
 \description{
 Generalized RAS procedure. Takes an initial matrix, a target row sum vector
-and target colsum vector. Iterates until all row sums of matrix equal to row sum vector
-and colsums of matrix equal col sum vector, within a tolerance
+and target colsum vector. Iterates until all row sums of matrix equal to target row sum vector
+and colsums of matrix equal target col sum vector, within a tolerance.
 }

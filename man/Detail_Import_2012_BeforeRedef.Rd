@@ -5,7 +5,7 @@
 \alias{Detail_Import_2012_BeforeRedef}
 \title{Detail 2012 Import Before Redefinition (2012 schema)}
 \format{
-A dataframe with 405 obs. and 427 variables
+A data frame with 405 obs. and 427 variables
 }
 \source{
 \url{https://apps.bea.gov/industry/xls/io-annual/ImportMatrices_Before_Redefinitions_DET_2007_2012.xlsx}

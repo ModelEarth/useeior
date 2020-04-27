@@ -5,7 +5,7 @@
 \alias{BLS_QCEW_2013}
 \title{BLS QCEW state ESTAB and EMP table for 2013}
 \format{
-A dataframe with 106238 obs. and 6 variables
+A data frame with 106238 obs. and 6 variables
 \describe{
  \item{GeoFips}{integer}
  \item{GeoName}{text code}

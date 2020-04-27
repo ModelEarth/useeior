@@ -5,7 +5,7 @@
 \alias{Detail_PEQ_2012}
 \title{Detail PEQ Bridge table for 2012 (2012 schema)}
 \format{
-A dataframe with 185 obs. and 9 variables:
+A data frame with 185 obs. and 9 variables:
 \describe{
  \item{NIPACode}{text code}
  \item{PEQCategory}{text category name, like 'Therapeutic medical equipment'}

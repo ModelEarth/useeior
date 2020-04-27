@@ -5,7 +5,7 @@
 \alias{Detail_Use_2012_PRO_BeforeRedef}
 \title{Detail 2012 Use Producer's Value Before Redefinition (2012 schema)}
 \format{
-A dataframe with 411 obs. and 428 variables
+A data frame with 411 obs. and 428 variables
 }
 \source{
 \url{https://apps.bea.gov//industry/iTables\%20Static\%20Files/AllTablesIO.zip}
