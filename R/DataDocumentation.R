@@ -804,3 +804,136 @@
 #' }
 #' @source \url{https://www.bls.gov/cew/downloadable-data-files.htm}
 "BLS_QCEW_2013"
+
+#' FAF table for 2012
+#' @format A dataframe with 882491 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2012}{numeric}
+#'  \item{value_2012}{numeric}
+#'  \item{tmiles_2012}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2012"
+
+#' FAF table for 2013
+#' @format A dataframe with 540145 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2013}{numeric}
+#'  \item{value_2013}{numeric}
+#'  \item{tmiles_2013}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2013"
+
+#' FAF table for 2014
+#' @format A dataframe with 549137 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2014}{numeric}
+#'  \item{value_2014}{numeric}
+#'  \item{tmiles_2014}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2014"
+
+#' FAF table for 2015
+#' @format A dataframe with 553480 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2015}{numeric}
+#'  \item{value_2015}{numeric}
+#'  \item{tmiles_2015}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2015"
+
+#' FAF table for 2016
+#' @format A dataframe with 550886 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2016}{numeric}
+#'  \item{value_2016}{numeric}
+#'  \item{tmiles_2016}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2016"
+
+#' FAF table for 2017
+#' @format A dataframe with 560968 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2017}{numeric}
+#'  \item{value_2017}{numeric}
+#'  \item{tmiles_2017}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2017"
+
+#' FAF table for 2018
+#' @format A dataframe with 568202 obs. and 12 variables
+#' \describe{
+#'  \item{fr_orig}{integer}
+#'  \item{dms_origst}{integer}
+#'  \item{dms_destst}{integer}
+#'  \item{fr_dest}{integer}
+#'  \item{fr_inmode}{integer}
+#'  \item{dms_mode}{integer}
+#'  \item{fr_outmode}{integer}
+#'  \item{sctg2}{integer}
+#'  \item{trade_type}{integer}
+#'  \item{tons_2018}{numeric}
+#'  \item{value_2018}{numeric}
+#'  \item{tmiles_2018}{numeric}
+#' }
+#' @source \url{https://faf.ornl.gov/fafweb/}
+"FAF_2018"
