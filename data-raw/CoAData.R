@@ -57,11 +57,11 @@ getCoANAICS8 <- function(){
   df2[nrow(df2) + 1,] = c('11000000', 'AG LAND')
   
   # coa equivalent to crop production: 111000
-  df2[nrow(df2) + 1,] = c('11100000', 'AG LAND, CROPLAND')
+  df2[nrow(df2) + 1,] = c('11100000', 'CROP TOTALS')
   df2[nrow(df2) + 1,] = c('1110000A', 'FIELD CROPS, OTHER') 
   
   # coa equivalent to Animal Production and Aquaculture: 112000
-  df2[nrow(df2) + 1,] = c('11200000', 'AG LAND, PASTURELAND')
+  df2[nrow(df2) + 1,] = c('11200000', 'ANIMAL TOTALS, INCL PRODUCTS')
   
   ## coa equivalent to soybean farming: 111110
   df2[nrow(df2) + 1,] = c('11111000', 'SOYBEANS')
