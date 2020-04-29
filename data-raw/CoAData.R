@@ -5,7 +5,7 @@
 
 
 # Generate Census of Agriculture NAICS8 from 2012 Census NAICS6
-getCoANAICS8 <- function(){
+getCoANAICS <- function(){
   
   ####### Pull NAICS6 from NAICS 2012 names and codes ########
 
@@ -30,7 +30,7 @@ getCoANAICS8 <- function(){
   df <- subset(NAICS, substr(NAICS$NAICS_Code, 1, 2) == '11')
   
   # right pad to make all NAICS 8 digits
-  df$NAICS_Code <- stringr::str_pad(df$NAICS_Code, 8, "right", pad="0")
+  #df$NAICS_Code <- stringr::str_pad(df$NAICS_Code, 8, "right", pad="0")
   
   # more specifically, don't want rows where first 3 digits are 113, 114, 115
   df <- subset(df, !substr(df$NAICS_Code, 1, 3) =='113')
@@ -47,24 +47,24 @@ getCoANAICS8 <- function(){
   # https://quickstats.nass.usda.gov/
   
   # create new df to incorporate coa naics
-  df2 <- data.frame(NAICS8=integer(),
+  df2 <- data.frame(NAICS_CoA=integer(),
                     Activity=character(),
                     stringsAsFactors=FALSE)
   
   #### CROPS ####################3
   
   # coa equivalent to agriculture, forestry, fishing, and hunting 
-  df2[nrow(df2) + 1,] = c('11000000', 'AG LAND')
+  df2[nrow(df2) + 1,] = c('11', 'AG LAND')
   
   # coa equivalent to crop production: 111000
-  df2[nrow(df2) + 1,] = c('11100000', 'CROP TOTALS')
+  df2[nrow(df2) + 1,] = c('111', 'CROP TOTALS')
   df2[nrow(df2) + 1,] = c('1110000A', 'FIELD CROPS, OTHER') 
   
   # coa equivalent to Animal Production and Aquaculture: 112000
-  df2[nrow(df2) + 1,] = c('11200000', 'ANIMAL TOTALS, INCL PRODUCTS')
+  df2[nrow(df2) + 1,] = c('112', 'ANIMAL TOTALS, INCL PRODUCTS')
   
   ## coa equivalent to soybean farming: 111110
-  df2[nrow(df2) + 1,] = c('11111000', 'SOYBEANS')
+  df2[nrow(df2) + 1,] = c('11111', 'SOYBEANS')
   
   # coa aggregates to oilseed (except soybean) farming: 111120
   df2[nrow(df2) + 1,] = c('1111200A', 'CANOLA')
@@ -87,19 +87,19 @@ getCoANAICS8 <- function(){
   #df2[nrow(df2) + 1,] = c('', 'BEANS, MUNG') # last year published 2002
   
   # coa equivalent to wheat farming: 111140
-  df2[nrow(df2) + 1,] = c('11114000', 'WHEAT')
+  df2[nrow(df2) + 1,] = c('11114', 'WHEAT')
   
   # coa aggregates to corn farming: 111150
-  df2[nrow(df2) + 1,] = c('11115000', 'CORN')
+  df2[nrow(df2) + 1,] = c('11115', 'CORN')
   df2[nrow(df2) + 1,] = c('1111500A', 'CORN, GRAIN') 
   df2[nrow(df2) + 1,] = c('1111500B', 'CORN, SILAGE')
   df2[nrow(df2) + 1,] = c('1111500C', 'POPCORN')
   
   # coa equivalent to rice farming: 111160
-  df2[nrow(df2) + 1,] = c('11116000', 'RICE')
+  df2[nrow(df2) + 1,] = c('11116', 'RICE')
   
   # coa equates to other grain farming: 111190
-  df2[nrow(df2) + 1,] = c('11119000', 'SMALL GRAINS, WHEAT & BARLEY & OATS & RYE')
+  df2[nrow(df2) + 1,] = c('11119', 'SMALL GRAINS, WHEAT & BARLEY & OATS & RYE')
   
   # coa aggregates to all other grain farming: 111199
   df2[nrow(df2) + 1,] = c('1111990A', 'BARLEY')
@@ -115,35 +115,35 @@ getCoANAICS8 <- function(){
   # df2[nrow(df2) + 1,] = c('', 'SWEET RICE') # last year published 2002
   
   # coa equivalent to vegetable and melon farming: 111200
-  df2[nrow(df2) + 1,] = c('11120000', 'VEGETABLE TOTALS') # this category does include melons
+  df2[nrow(df2) + 1,] = c('1112', 'VEGETABLE TOTALS') # this category does include melons
   
   # coa aggregates to fruit and tree nut farming: 111300
-  df2[nrow(df2) + 1,] = c('11130000', 'ORCHARDS')
+  df2[nrow(df2) + 1,] = c('1113', 'ORCHARDS')
   df2[nrow(df2) + 1,] = c('1113000A', 'BERRY TOTALS')
   
   # coa aggregates to other noncitrus fruit farming: 111339
   # missing pinneapples
   
   # coa aggregates to greenhouse nursery and floriculture production: 111400
-  df2[nrow(df2) + 1,] = c('11140000', 'HORTICULTURE TOTALS')
+  df2[nrow(df2) + 1,] = c('1114', 'HORTICULTURE TOTALS')
   df2[nrow(df2) + 1,] = c('1114000A', 'CUT CHRISTMAS TREES')
   df2[nrow(df2) + 1,] = c('11140008', 'SHORT TERM WOODY CROPS')
   
   # coa equivalent to other crop farming: 111900
-  df2[nrow(df2) + 1,] = c('11190000', 'CROPS, OTHER')
+  df2[nrow(df2) + 1,] = c('1119', 'CROPS, OTHER')
   
   # coa equivalent to tobacco farming: 111910
-  df2[nrow(df2) + 1,] = c('11191000', 'TOBACCO')
+  df2[nrow(df2) + 1,] = c('11191', 'TOBACCO')
   
   # coa aggregates to cotton: 111920
-  df2[nrow(df2) + 1,] = c('11192000', 'COTTON')
+  df2[nrow(df2) + 1,] = c('11192', 'COTTON')
   
   # coa aggregates to sugarcane farming: 111930
   df2[nrow(df2) + 1,] = c('1119300A', 'SUGARCANE, SUGAR') 
   df2[nrow(df2) + 1,] = c('1119300B', 'SUGARCANE, SEED') 
   
   # coa aggregates to hay farming: 111940
-  df2[nrow(df2) + 1,] = c('11194000', 'HAY & HAYLAGE')
+  df2[nrow(df2) + 1,] = c('11194', 'HAY & HAYLAGE')
   df2[nrow(df2) + 1,] = c('1119400A', 'HAY & HAYLAGE (EXCL ALFALFA)')
   df2[nrow(df2) + 1,] = c('1119400B', 'HAY & HAYLAGE, ALFALFA')
   df2[nrow(df2) + 1,] = c('11194010', 'HAY')
@@ -178,7 +178,7 @@ getCoANAICS8 <- function(){
   df2[nrow(df2) + 1,] = c('1121100D', 'CATTLE, INCL CALVES')
   
   # beef cattle ranching and farming including feedlots: 112111	
-  df2[nrow(df2) + 1,] = c('11211100', 'CATTLE, COWS, BEEF')
+  df2[nrow(df2) + 1,] = c('112111', 'CATTLE, COWS, BEEF')
   
   # cattle feedlots: 112112	
   df2[nrow(df2) + 1,] = c('112112', 'CATTLE, ON FEED')                                 
@@ -187,7 +187,7 @@ getCoANAICS8 <- function(){
   df2[nrow(df2) + 1,] = c('1121200A', 'CATTLE, COWS, MILK')
   
   # hog and pig farming: 112200	
-  df2[nrow(df2) + 1,] = c('11220000', 'HOGS')
+  df2[nrow(df2) + 1,] = c('1122', 'HOGS')
   
   
   # poultry and egg production: 112300	
@@ -201,7 +201,7 @@ getCoANAICS8 <- function(){
   df2[nrow(df2) + 1,] = c('1123200C', 'CHICKENS, ROOSTERS')
   
   # turkey production: 112330	
-  df2[nrow(df2) + 1,] = c('11233000', 'TURKEYS')
+  df2[nrow(df2) + 1,] = c('11233', 'TURKEYS')
   
   # poultry hatcheries: 112340                               
   
@@ -222,16 +222,16 @@ getCoANAICS8 <- function(){
   
   
   # sheep and goat farming: 112400
-  df2[nrow(df2) + 1,] = c('11240000','SHEEP & GOATS TOTALS')
+  df2[nrow(df2) + 1,] = c('1124','SHEEP & GOATS TOTALS')
   
   # sheep farming: 112410	
-  df2[nrow(df2) + 1,] = c('11241000', 'SHEEP, INCL LAMBS')
+  df2[nrow(df2) + 1,] = c('11241', 'SHEEP, INCL LAMBS')
   
   # goat farming: 112420	
-  df2[nrow(df2) + 1,] = c('11242000',	'GOATS')
+  df2[nrow(df2) + 1,] = c('11242',	'GOATS')
   
   # animal aquaculture: 112500
-  df2[nrow(df2) + 1,] = c('11250000', 'AQUACULTURE TOTALS')                             
+  df2[nrow(df2) + 1,] = c('1125', 'AQUACULTURE TOTALS')                             
   # part of Finfish farming                                 
   df2[nrow(df2) + 1,] = c('1125110A',	'FOOD FISH, CATFISH') 
   df2[nrow(df2) + 1,] = c('1125110B',	'FOOD FISH, TROUT') 
@@ -252,7 +252,7 @@ getCoANAICS8 <- function(){
   df2[nrow(df2) + 1,] = c('1129100B',	'HONEY, BEE COLONIES')
   
   # horse and other equine production: 112920	
-  df2[nrow(df2) + 1,] = c('11292000','EQUINE, (HORSES & PONIES) & (MULES & BURROS & DONKEYS)')
+  df2[nrow(df2) + 1,] = c('11292','EQUINE, (HORSES & PONIES) & (MULES & BURROS & DONKEYS)')
   df2[nrow(df2) + 1,] = c('1129200A','EQUINE, HORSES AND POINIES')
   df2[nrow(df2) + 1,] = c('1129200B','EQUINE, MULES & BURROS & DONKEYS')
   
@@ -271,50 +271,54 @@ getCoANAICS8 <- function(){
   
   ##### JOIN imported naics and manually created naics dataframes
   
-  df3 <- merge(df, df2, by.x = "NAICS_Code", by.y = "NAICS8", all = TRUE)
+  df3 <- merge(df, df2, by.x = "NAICS_Code", by.y = "NAICS_CoA", all = TRUE)
   
   # add additional column of original NAICS 2-6 digit codes pulled from NAICS csv file
   df4 <- merge(df3, NAICS, by = "NAICS_Name", all.x = TRUE)
   
   # rename columns and reorder 
   names(df4)[names(df4) == 'NAICS_Code.y'] <- 'NAICS_2012_Code'
-  names(df4)[names(df4) == 'NAICS_Code.x'] <- 'NAICS8_Code'
+  names(df4)[names(df4) == 'NAICS_Code.x'] <- 'NAICS_CoA_Code'
   
-  df4 <-df4[ , c("NAICS_2012_Code", "NAICS8_Code", "NAICS_Name", "Activity")]
+  df4 <-df4[ , c("NAICS_2012_Code", "NAICS_CoA_Code", "NAICS_Name", "Activity")]
   
   # sort data by NAICS8 code
-  df5 <- df4[order(df4$NAICS8_Code, df4$NAICS_2012_Code),]
+  df5 <- df4[order(df4$NAICS_CoA_Code, df4$NAICS_2012_Code),]
   
   # remove rows where the NAICS_2012_Code ends in "0". Because in all cases, this is a 6 digit NAICS
   # and the 5 digit NAICS also exists and has the same NAICS code name. Want to avoid possible double counting.
   df6 <- subset(df5, (!substr(df5$NAICS_2012_Code, 6, 6)=='0') | is.na(df5$NAICS_2012_Code)) 
   
-  # At times, one NAICS8 corresponds directly to one NAICS 5/6 digit. In other cases, multiple NAICS8 must be summed to
+  # At times, one NAICS_CoA corresponds directly to one NAICS 5/6 digit. In other cases, multiple NAICS_CoA must be summed to
   # calculate the value of one NAICS 5/6 digit. This next section of code determines occurances of the later situation
-  # and assigns a "NAICS_2012_Code" alongside a NAICS8_Code. If "NAICS_2012_Code" is left as NA, then the row of data 
+  # and assigns a "NAICS_2012_Code" alongside a NAICS_CoA_Code. If "NAICS_2012_Code" is left as NA, then the row of data 
   # does not need to be summed.
   
-  # add NAICS7 column used to match two dataframes - drop later
-  df6$NAICS7 <- substr(df6$NAICS8_Code, 1, 7)
+  # add NAICS6 column used to match two dataframes - drop later
+  df6$NAICS6 <- substr(df6$NAICS_CoA_Code, 1, 6)
+  # drop any trailing 0s
+  df6$NAICS6 <-sub("0*$", "", df6$NAICS6)
   
   # create subset of df where Activity = NA
   df_s <- subset(df6, is.na(Activity))
   
-  # modify naics8 to naics7
-  df_s$NAICS7 <- substr(df_s$NAICS8_Code, 1, 7)
+  # modify naics_coa to naics6
+  df_s$NAICS6 <- substr(df_s$NAICS_CoA_Code, 1, 6)
+  # drop any trailing 0s
+  df_s$NAICS6 <-sub("0*$", "", df_s$NAICS6)
   
   # rename column
   names(df_s)[names(df_s) == 'NAICS_2012_Code'] <- 'NAICS_Replacement'
   
   # select columns
-  df_s <- df_s[ , c("NAICS_Replacement", "NAICS7")]
+  df_s <- df_s[ , c("NAICS_Replacement", "NAICS6")]
   
-  # merge master dataframe with subset dataframe by naics7, then drop naics7
-  df7 <- merge(df6, df_s, by = "NAICS7", all.x = TRUE)
-  df7 <- subset(df7, select = -c(NAICS7))
+  # merge master dataframe with subset dataframe by naics6, then drop naics6
+  df7 <- merge(df6, df_s, by = "NAICS6", all.x = TRUE)
+  df7 <- subset(df7, select = -c(NAICS6))
   
   # sort data by NAICS8 code
-  df8 <- df7[order(df7$NAICS8_Code, df7$NAICS_2012_Code),]
+  df8 <- df7[order(df7$NAICS_CoA_Code, df7$NAICS_2012_Code),]
   
   # if NAICS_12_Code is NA, replace with NAICS_Replacement column (some of which are also NA)
   df8$NAICS_2012_Code[is.na(df8$NAICS_2012_Code)] <- df8$NAICS_Replacement[is.na(df8$NAICS_2012_Code)]
@@ -325,15 +329,18 @@ getCoANAICS8 <- function(){
   ### finished assigning NAICS codes. Now, modify presentation
   
   
-  # if the coa activity definition colum is NA, replace with the 2012 NAICS name
-  df9 <- df8
-  df9$Activity[is.na(df9$Activity)] <- as.character(df9$NAICS_Name[is.na(df9$Activity)])
+  # # if the coa activity definition colum is NA, replace with the 2012 NAICS name
+  # df9 <- df8
+  # df9$Activity[is.na(df9$Activity)] <- as.character(df9$NAICS_Name[is.na(df9$Activity)])
+  
+  # # if the coa activity definition colum is NA, drop row from crosswalk
+  df9 <-df8[!is.na(df8$Activity), ]
   
   # select specific columns
-  df9 <-df9[ , c("NAICS_2012_Code", "NAICS8_Code", "Activity")]
+  df9 <-df9[ , c("NAICS_2012_Code", "NAICS_CoA_Code", "Activity")]
   
   # sort df
-  CoAtoNAICS <- df9[order(df9$NAICS8_Code, df9$NAICS_2012_Code),]
+  CoAtoNAICS <- df9[order(df9$NAICS_CoA_Code, df9$NAICS_2012_Code),]
   
   # write as csv
   
