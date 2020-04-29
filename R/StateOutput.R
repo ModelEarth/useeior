@@ -55,7 +55,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
     # Load BEA state Emp
     BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoFips", "GeoName", "LineCode", as.character(year))]
     # Map BEA state Emp (from LineCode) to BEA Summary
-    BEAStateEmployment <- merge(BEAStateEmployment,
+    BEAStateEmployment <- merge(BEAStateEmployment[BEAStateEmployment$GeoName %in% c(state.name, "District of Columbia"), ],
                                 allocation_factors[, c("BEA_2012_Summary_Code", "LineCode", "factor")],
                                 by = "LineCode")
     # Adjust BEA state Emp value based on allocation factor
@@ -171,8 +171,15 @@ calculateStateUSVARatiobyLineCode <- function(year) {
 calculateStateIndustryOutputbyLineCode <- function(year) {
   # Generate state_US_VA_ratio_LineCode
   state_US_VA_ratio_LineCode <- calculateStateUSVARatiobyLineCode(year)
-  # Load US Gross Output
-  USGrossOutput <- useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE]
+  # # Load US Gross Output
+  # USGrossOutput <- useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE]
+  # Get US Industry Output from US Make table
+  US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"), as.environment("package:useeior"))*1E6
+  US_Summary_MakeTrasaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
+                                               -which(colnames(US_Summary_Make)=="Total Industry Output")]
+  # Sum US_Summary_MakeTrasaction by row to get US_Summary_IndustryOutput
+  USGrossOutput <- as.data.frame(rowSums(US_Summary_MakeTrasaction))
+  colnames(USGrossOutput) <- as.character(year)
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
                                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
@@ -193,51 +200,156 @@ calculateStateIndustryOutputbyLineCode <- function(year) {
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
 getStateCommodityOutputRatioEstimates <- function(year) {
-  # Import flowsa
-  #library(reticulate)
-  #flowsa <- import("flowsa")
-  
-  # Agriculture (111CA)
-  # pre-saved CoA data
-  #CoA <- flowsa$getFlowByActivity("CoA", list(as.character(year)), "USDA_CoA_Cropland")
-  # Load USDA 2012 Census Report (by BEA)
-  AgOutput <- utils::read.table(system.file("extdata", "USDAStateAgProdMarketValueByBEA.csv", package = "useeior"),
-                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE,
-                                colClasses = c("character",rep("numeric",51)))
-  # Map to BEA Summary then aggregate
-  AgOutput <- merge(AgOutput, unique(useeior::MasterCrosswalk2012[, c("BEA_2012_Detail_Code", "BEA_2012_Summary_Code")]),
-                    by.x = "BEA_389", by.y = "BEA_2012_Detail_Code")
-  AgOutput <- stats::aggregate(AgOutput[, c("United States", state.name)],
-                               by = list(AgOutput$BEA_2012_Summary_Code), sum, na.rm = TRUE)
-  colnames(AgOutput)[1] <- "BEA_2012_Summary_Code"
-  # Calculate state/US Ag output ratio
-  AgOutput[, state.name] <- AgOutput[, state.name]/AgOutput[, "United States"]
-  # Reshape table from wide to long
-  AgOutput <- reshape2::melt(AgOutput[, c("BEA_2012_Summary_Code", state.name)], id.vars = "BEA_2012_Summary_Code")
-  colnames(AgOutput) <- c("BEA_2012_Summary_Code", "GeoName", "OutputRatio")
-  
-  # Forestry & Fishery (113FF)
-  # Load USDA-FS Forest Product Cut Values data by state (FY2012)
-  ForestOutput <- utils::read.table(system.file("extdata", "ForestProdCutValueFY2012.csv", package = "useeior"),
-                                    sep = ",", header = TRUE, check.names = FALSE, colClasses = c("character", "numeric"))
-  # Load NOAA Fishery Landings data by state by year (2010-2016)
-  FisheryOutput <- utils::read.table(system.file("extdata", "FisheryLandings2010-2016.csv", package = "useeior"),
-                                     sep = ",", header = TRUE, check.names = FALSE, colClasses = c("numeric", "character", "numeric"))
-  FisheryOutput <- FisheryOutput[FisheryOutput$Year==year, ]
-  # Combine Forestry & Forestry
-  ForestryandFishery <- merge(ForestOutput[ForestOutput$State%in%state.name, ],
-                              FisheryOutput[FisheryOutput$State%in%state.name, ],
-                              by = "State", all = TRUE)
-  ForestryandFishery[is.na(ForestryandFishery)] <- 0
-  ForestryandFishery$Output <- ForestryandFishery$CutValue + ForestryandFishery$LandingsValue
-  # Calculate state/US Forestry & Forestry output ratio
-  ForestryandFishery$OutputRatio <- ForestryandFishery$Output/sum(ForestryandFishery$Output)
-  # Add BEA sector code
-  ForestryandFishery <- cbind.data.frame("113FF", ForestryandFishery[, c("State", "OutputRatio")])
-  colnames(ForestryandFishery) <- c("BEA_2012_Summary_Code", "GeoName", "OutputRatio")
-  
-  # Assemble Commodity Output from Agriculture, Forestry and Fishery
-  StateCommodityOutputRatio <- rbind(AgOutput, ForestryandFishery)
+  # Generate Ag, Fishery, Forestry commodity output
+  AFF <- getAgFisheryForestryCommodityOutput(year)
+  # Generate FAF commodity output
+  FAF <- getFAFCommodityOutput(year)
+  # Combine all commodity output
+  StateCommodityOutputRatio <- rbind(AFF, FAF)
   return(StateCommodityOutputRatio)
 }
 
+
+#' Load flowbyactivity data from FLOWSA
+#' @param flowclass A character value specifying flow class, can be "Money".
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @param datasource A character value specifying data source.
+#' @return A dataframe contains state Ag, Fishery and Forestry commodity output
+#' for specified state with row names being BEA sector code.
+loadDatafromFLOWSA <- function(flowclass, year, datasource) {
+  # Import flowsa
+  library(reticulate)
+  flowsa <- import("flowsa")
+  # Load data
+  df <- flowsa$getFlowByActivity(flowclass, list(as.character(year)), datasource)
+  return(df)
+}
+
+#' Estimate state Ag, Fishery and Forestry commodity output ratios
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A dataframe contains state Ag, Fishery and Forestry commodity output
+#' for specified state with row names being BEA sector code.
+getAgFisheryForestryCommodityOutput <- function(year) {
+  # Load state FIPS
+  FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
+                                  sep = ",", header = TRUE, check.names = FALSE)
+  
+  # Farms (111CA)
+  # Load CoA data from flowsa
+  CoA <- loadDatafromFLOWSA("Money", year, "USDA_CoA_ProdMarkValue")
+  # Select Crops Total and Animal Total
+  CoA <- CoA[CoA$ActivityProducedBy%in%c("CROP TOTALS", "ANIMAL TOTALS, INCL PRODUCTS"), ]
+  # Aggregate FlowAmount by FIPS
+  CoA <- stats::aggregate(CoA$FlowAmount, by = list(CoA$FIPS), sum)
+  colnames(CoA) <- c("State_FIPS", "Value")
+  # Convert State_FIPS to numeric values
+  CoA$State_FIPS <- as.numeric(substr(CoA$State_FIPS, 1, 2))
+  # Map to state names
+  CoA <- merge(CoA, FIPS_STATE, by = "State_FIPS")
+  # Calculate Commodity Output Ratio
+  CoA$Ratio <- CoA$Value/sum(CoA$Value)
+  # Assign BEA Code
+  CoA$BEA_2012_Summary_Code <- "111CA"
+  # Re-order columns and drop unwanted columns
+  CoA <- CoA[, c("BEA_2012_Summary_Code", "State", "Value", "Ratio")]
+  
+  # Fishery and Forestry
+  # Load Fishery Landings and Forestry CutValue data from flowsa
+  ForestryFishery <- cbind(loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings"),
+                           loadDatafromFLOWSA("Money", "2018", "USFS_Forestry"))
+  # Convert State_FIPS to numeric values
+  ForestryFishery$State_FIPS <- as.numeric(substr(ForestryFishery$FIPS, 1, 2))
+  # Map to state names
+  ForestryFishery <- merge(ForestryFishery[ForestryFishery$Year==year,
+                                           c("State_FIPS", "FlowAmount")],
+                           FIPS_STATE, by = "State_FIPS")
+  
+  # Combine CoA with ForestryFishery
+  AFF <- rbind(CoA, ForestryFishery)
+  return(AFF)
+}
+
+#' Estimate state FAF commodity output ratios
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A dataframe contains state FAF commodity output
+#' for specified state with row names being BEA sector code.
+getFAFCommodityOutput <- function(year) {
+  # Load state FIPS
+  FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
+                                  sep = ",", header = TRUE, check.names = FALSE)
+  # Load pre-saved FAF4 commodity flow data
+  FAF <- get(paste("FAF", year, sep = "_"))
+  # Keep domestic and export trade, keep useful columns, then rename
+  FAF <- FAF[FAF$trade_type%in%c(1, 3), c("dms_origst", "sctg2", paste0("value_", year))]
+  colnames(FAF) <- c("State_FIPS", "SCTG", "Value")
+  # Calculate state commodity output by SCTG
+  FAF <- merge(FAF, FIPS_STATE, by = "State_FIPS", all.x = TRUE)
+  FAF <- stats::aggregate(FAF$Value, by = list(FAF$SCTG, FAF$State), sum)
+  colnames(FAF) <- c("SCTG", "State", "Value")
+  # Map FAF from SCTG to BEA Summary commodities
+  # Load SCTGtoBEA mapping table
+  SCTGtoBEA <- utils::read.table(system.file("extdata", "Crosswalk_SCTGtoBEA.csv", package = "useeior"),
+                                 sep = ",", header = TRUE, check.names = FALSE)
+  SCTGtoBEASummary <- unique(SCTGtoBEA[, c("SCTG", "BEA_2012_Summary_Code")])
+  FAF <- merge(FAF, SCTGtoBEASummary, by = "SCTG")
+  # Determine BEA sectors that need allocation
+  allocation_sectors <- SCTGtoBEASummary[duplicated(SCTGtoBEASummary$SCTG) |
+                                           duplicated(SCTGtoBEASummary$SCTG, fromLast = TRUE), ]
+  allocation_sectors <- allocation_sectors[!allocation_sectors$BEA_2012_Summary_Code%in%c("111CA", "113FF", "311FT"),]
+  # Use BEA State Emp to allocate
+  BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoName", "LineCode", as.character(year))]
+  BEAStateEmptoBEAmapping <- utils::read.table(system.file("extdata", "Crosswalk_StateEmploymenttoBEASummaryIO2012Schema.csv", package = "useeior"),
+                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  # Process FAF for each state
+  FAF_state_list <- list()
+  for (state in unique(FAF$State)) {
+    FAF_state <- FAF[FAF$State==state, ]
+    # Step 1. Calculate foods (311FT) as
+    # 311FT = (111CA + 113FF + 311FT) - (CoA + ForestryandFishery)
+    FAF_total <- sum(FAF[FAF$BEA_2012_Summary_Code%in%c("111CA", "113FF", "311FT"), "Value"])
+    CoAForestryFishery <- sum(CoA, ForestryandFishery)
+    FAF_state[FAF_state$BEA=="331FT", "Value"] <- FAF_total - CoAForestryFishery
+    # Drop "111CA" and "113FF" from FAF
+    FAF_state <- FAF_state[! FAF_state$BEA_2012_Summary_Code%in%c("111CA", "113FF"), ]
+    # Step 2. Separate FAF_state to FAF_state_1 (does not need allocation)
+    # And FAF_state_2 (needs allocation)
+    FAF_state_1 <- FAF_state[!FAF_state$SCTG%in%allocation_sectors$SCTG, ]
+    FAF_state_2 <- FAF_state[FAF_state$SCTG%in%allocation_sectors$SCTG, ]
+    # Step 2.1. Aggregate FAF_state_1 by BEA industries
+    FAF_state_1 <- stats::aggregate(FAF_state_1$Value,by = list(FAF_state_1$State,
+                                                                FAF_state_1$BEA_2012_Summary_Code), sum)
+    colnames(FAF_state_1) <- c("State", "BEA_2012_Summary_Code", "Value")
+    # Step 2.2. Allocate FAF_state_2 from SCTG to BEA using BEA state employment
+    StateEmployment <- merge(BEAStateEmployment[BEAStateEmployment$GeoName==state, ],
+                             BEAStateEmptoBEAmapping, by = "LineCode")
+    # Aggregate StateEmployment by BEA
+    StateEmployment <- stats::aggregate(StateEmployment[, as.character(year)],
+                                        by = list(StateEmployment$BEA_2012_Summary_Code), sum)
+    colnames(StateEmployment) <- c("BEA_2012_Summary_Code", "Emp")
+    
+    # Merge with allocation_sectors
+    StateEmployment <- merge(StateEmployment, allocation_sectors, by = "BEA_2012_Summary_Code")
+    # Merge with FAF_state_2
+    FAF_state_2 <- merge(FAF_state_2, StateEmployment, by = c("SCTG", "BEA_2012_Summary_Code"))
+    for (sctg in unique(FAF_state_2$SCTG)) {
+      # Calculate allocation factor
+      weight_vector <- FAF_state_2[FAF_state_2$SCTG==sctg, "Emp"]
+      allocation_factor <- weight_vector/sum(weight_vector, na.rm = TRUE)
+      # Allocate Value
+      FAF_state_2[FAF_state_2$SCTG==sctg, "Value"] <- FAF_state_2[FAF_state_2$SCTG==sctg, "Value"]*allocation_factor
+      # Aggregate by BEA
+      FAF_state_2 <- stats::aggregate(FAF_state_2$Value,
+                                      by = list(FAF_state_2$State, FAF_state_2$BEA_2012_Summary_Code),
+                                      sum, na.rm = TRUE)
+      colnames(FAF_state_2) <- c("State", "BEA_2012_Summary_Code", "Value")
+    }
+    FAF_state_list[[state]] <- rbind(FAF_state_1, FAF_state_2)
+  }
+  FAF <- do.call(rbind, FAF_state_list)
+  # Calculate total commodity output ratio
+  for (commodity in unique(FAF$BEA_2012_Summary_Code)) {
+    commodity_total <- sum(FAF[FAF$BEA_2012_Summary_Code==commodity, "Value"])
+    FAF[FAF$BEA_2012_Summary_Code==commodity, "Ratio"] <- FAF[FAF$BEA_2012_Summary_Code==commodity, "Value"]/commodity_total
+  }
+  return(FAF)
+}
