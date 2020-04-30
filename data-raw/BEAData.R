@@ -842,22 +842,22 @@ usethis::use_data(State_GOS_2007_2018, overwrite = TRUE)
 # Get state employment (full-time and part-time) 2009-2018
 getBEAStateEmployment <- function () {
   APIkey <- readLines(rappdirs::user_data_dir("BEA_API_KEY.txt"), warn = FALSE)
-  linecodes <- jsonlite::fromJSON(paste("https://apps.bea.gov/api/data/?&UserID=", APIkey,
-                                        "method=GetParameterValuesFiltered",
-                                        "datasetname=Regional",
-                                        "TargetParameter=LineCode",
-                                        "TableName=SAEMP25N",
-                                        "ResultFormat=json", sep = "&"))
+  linecodes <- jsonlite::fromJSON(paste0("https://apps.bea.gov/api/data/?&UserID=", APIkey,
+                                         "&method=GetParameterValuesFiltered",
+                                         "&datasetname=Regional",
+                                         "&TargetParameter=LineCode",
+                                         "&TableName=SAEMP25N",
+                                         "&ResultFormat=json"))
   StateEmployment <- data.frame()
   for (linecode in linecodes$BEAAPI$Results$ParamValue$Key) {
     StateEmployment_linecode <- jsonlite::fromJSON(paste0("https://apps.bea.gov/api/data/?&UserID=", APIkey,
-                                                          "method=GetData",
-                                                          "datasetname=Regional",
-                                                          "TableName=SAEMP25N",
-                                                          "LineCode=", linecode,
-                                                          "GeoFIPS=STATE",
-                                                          "Year=Last10",
-                                                          "ResultFormat=json", sep = "&"))
+                                                          "&method=GetData",
+                                                          "&datasetname=Regional",
+                                                          "&TableName=SAEMP25N",
+                                                          "&LineCode=", linecode,
+                                                          "&GeoFIPS=STATE",
+                                                          "&Year=Last10",
+                                                          "&ResultFormat=json"))
     StateEmployment_linecode <- StateEmployment_linecode$BEAAPI$Results$Data
     if (is.null(StateEmployment_linecode$NoteRef)) {
       StateEmployment_linecode$NoteRef <- ""
