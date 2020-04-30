@@ -792,19 +792,6 @@
 #' @source \url{https://apps.bea.gov/API/signup/index.cfm}
 "State_Employment_2009_2018"
 
-#' BLS QCEW state ESTAB and EMP table for 2013
-#' @format A data frame with 106238 obs. and 6 variables
-#' \describe{
-#'  \item{GeoFips}{integer}
-#'  \item{GeoName}{text code}
-#'  \item{NAICS}{character}
-#'  \item{Year}{integer}
-#'  \item{ESTAB}{number of establishment}
-#'  \item{EMP}{number of employee}
-#' }
-#' @source \url{https://www.bls.gov/cew/downloadable-data-files.htm}
-"BLS_QCEW_2013"
-
 #' FAF table for 2012
 #' A dataset of domestic and international commodity movement
 #' by all modes of transportation.
