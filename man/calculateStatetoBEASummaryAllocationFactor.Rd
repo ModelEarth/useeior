@@ -12,7 +12,7 @@ calculateStatetoBEASummaryAllocationFactor(year, allocationweightsource)
 \item{statetablename}{Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.}
 }
 \value{
-A dataframe contains allocation factors for all states with row names being BEA sector code.
+A data frame contains allocation factors for all states with row names being BEA sector code.
 }
 \description{
 Calculate allocation factors based on state-level data, such as employment

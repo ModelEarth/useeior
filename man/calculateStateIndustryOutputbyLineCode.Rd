@@ -10,7 +10,7 @@ calculateStateIndustryOutputbyLineCode(year)
 \item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
-A dataframe contains state industry output by BEA State LineCode.
+A data frame contains state industry output by BEA State LineCode.
 }
 \description{
 Calculate state industry output by BEA State LineCode via multiplying state_US_VA_ratio_LineCode by USGrossOutput_LineCode.

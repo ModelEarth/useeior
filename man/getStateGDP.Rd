@@ -10,7 +10,7 @@ getStateGDP(year)
 \item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
-A dataframe contains state GDP for all states at a specific year.
+A data frame contains state GDP for all states at a specific year.
 }
 \description{
 Get industry-level GDP for all states at a specific year.

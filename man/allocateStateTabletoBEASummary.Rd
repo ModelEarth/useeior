@@ -14,7 +14,7 @@ allocateStateTabletoBEASummary(statetablename, year, allocationweightsource)
 \item{allocationweightsource}{Source of allocatino weight, can be "Employment".}
 }
 \value{
-A dataframe contains allocated state value for all states with row names being BEA sector code.
+A data frame contains allocated state value for all states with row names being BEA sector code.
 }
 \description{
 Allocate state table (GDP, Tax, Employment Compensation, and GOS) to BEA Summary based on specified weight

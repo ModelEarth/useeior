@@ -1,6 +1,6 @@
 #' Get industry-level GDP for all states at a specific year.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state GDP for all states at a specific year.
+#' @return A data frame contains state GDP for all states at a specific year.
 getStateGDP <- function(year) {
   # Load pre-saved state GDP 2007-2018 
   StateGDP <- useeior::State_GDP_2007_2018
@@ -11,7 +11,7 @@ getStateGDP <- function(year) {
 #' Map state table to BEA Summary, mark sectors that need allocation
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state value for all states with row names being BEA sector code.
+#' @return A data frame contains state value for all states with row names being BEA sector code.
 mapStateTabletoBEASummary <- function(statetablename, year) {
   if (statetablename=="GDP") {
     StateTable <- getStateGDP(year)
@@ -27,7 +27,7 @@ mapStateTabletoBEASummary <- function(statetablename, year) {
 #' Calculate allocation factors based on state-level data, such as employment
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains allocation factors for all states with row names being BEA sector code.
+#' @return A data frame contains allocation factors for all states with row names being BEA sector code.
 calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsource) {
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
@@ -83,7 +83,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @param allocationweightsource Source of allocatino weight, can be "Employment".
-#' @return A dataframe contains allocated state value for all states with row names being BEA sector code.
+#' @return A data frame contains allocated state value for all states with row names being BEA sector code.
 allocateStateTabletoBEASummary <- function(statetablename, year, allocationweightsource) {
   # Generate StateTableBEA
   StateTableBEA <- mapStateTabletoBEASummary(statetablename, year)
@@ -106,7 +106,7 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
 
 #' Calculate state-US GDP (value added) ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
+#' @return A data frame contains ratios of state/US GDP (value added) for all states at a specific year at BEA Summary level.
 calculateStateUSValueAddedRatio <- function(year) {
   # Generate state GDP (value added) table
   StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, "Employment")
@@ -137,7 +137,7 @@ calculateStateUSValueAddedRatio <- function(year) {
 
 #' Calculate state-US GDP (value added) ratios by BEA State LineCode.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains ratios of state/US GDP (value added) for all states at a specific year by BEA State LineCode.
+#' @return A data frame contains ratios of state/US GDP (value added) for all states at a specific year by BEA State LineCode.
 calculateStateUSVARatiobyLineCode <- function(year) {
   # Load LineCode-coded State ValueAdded
   StateValueAdded <- getStateGDP(year)
@@ -167,7 +167,7 @@ calculateStateUSVARatiobyLineCode <- function(year) {
 
 #' Calculate state industry output by BEA State LineCode via multiplying state_US_VA_ratio_LineCode by USGrossOutput_LineCode.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state industry output by BEA State LineCode.
+#' @return A data frame contains state industry output by BEA State LineCode.
 calculateStateIndustryOutputbyLineCode <- function(year) {
   # Generate state_US_VA_ratio_LineCode
   state_US_VA_ratio_LineCode <- calculateStateUSVARatiobyLineCode(year)
@@ -198,7 +198,7 @@ calculateStateIndustryOutputbyLineCode <- function(year) {
 
 #' Estimate state commodity output ratios
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state commodity output for specified state with row names being BEA sector code.
+#' @return A data frame contains state commodity output for specified state with row names being BEA sector code.
 getStateCommodityOutputRatioEstimates <- function(year) {
   # Generate Ag, Fishery, Forestry commodity output
   AFF <- getAgFisheryForestryCommodityOutput(year)
@@ -214,7 +214,7 @@ getStateCommodityOutputRatioEstimates <- function(year) {
 #' @param flowclass A character value specifying flow class, can be "Money".
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @param datasource A character value specifying data source.
-#' @return A dataframe contains state Ag, Fishery and Forestry commodity output
+#' @return A data frame contains state Ag, Fishery and Forestry commodity output
 #' for specified state with row names being BEA sector code.
 loadDatafromFLOWSA <- function(flowclass, year, datasource) {
   # Import flowsa
@@ -225,16 +225,44 @@ loadDatafromFLOWSA <- function(flowclass, year, datasource) {
   return(df)
 }
 
+#' Load BEA and BLS QCEW State Employment data from pre-saved .rda files and FLOWSA.
+#' Map to BEA Summary sectors.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains State Emp by BEA Summary.
+getStateEmploymentbyBEASummary <- function(year) {
+  # BEA State Emp
+  BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoName", "LineCode", as.character(year))]
+  BEAStateEmptoBEAmapping <- utils::read.table(system.file("extdata", "Crosswalk_StateEmploymenttoBEASummaryIO2012Schema.csv", package = "useeior"),
+                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  BEAStateEmployment <- merge(BEAStateEmployment, BEAStateEmptoBEAmapping, by = "LineCode")
+  # Aggregate StateEmployment by BEA
+  BEAStateEmployment <- stats::aggregate(BEAStateEmployment[, as.character(year)],
+                                         by = list(BEAStateEmployment$BEA_2012_Summary_Code,
+                                                   BEAStateEmployment$GeoName), sum)
+  colnames(BEAStateEmployment) <- c("BEA_2012_Summary_Code", "State", "Emp")
+  # BLS QCEW Emp
+  BLS_QCEW <- loadDatafromFLOWSA("Employment", year, "BLS_QCEW_EMP")
+  BLS_QCEW <- mapBLSQCEWtoBEA(BLS_QCEW, year, "Summary")
+  BLS_QCEW$FIPS <- as.numeric(substr(BLS_QCEW$FIPS, 1, 2))
+  FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
+                                  sep = ",", header = TRUE, check.names = FALSE)
+  BLS_QCEW <- merge(BLS_QCEW, FIPS_STATE, by.x = "FIPS", by.y = "State_FIPS")
+  # Prioritize BEAStateEmployment, replace NAs in Emp with values from BLS_QCEW
+  StateEmployment <- merge(BEAStateEmployment, BLS_QCEW, by = c("State", "BEA_2012_Summary_Code"))
+  StateEmployment[is.na(StateEmployment$Emp), "Emp"] <- StateEmployment[is.na(StateEmployment$Emp), "FlowAmount"]
+  # Drop unwanted columns
+  StateEmployment <- StateEmployment[, colnames(BEAStateEmployment)]
+  return(StateEmployment)
+}
+
 #' Estimate state Ag, Fishery and Forestry commodity output ratios
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state Ag, Fishery and Forestry commodity output
+#' @return A data frame contains state Ag, Fishery and Forestry commodity output
 #' for specified state with row names being BEA sector code.
 getAgFisheryForestryCommodityOutput <- function(year) {
   # Load state FIPS
   FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
                                   sep = ",", header = TRUE, check.names = FALSE)
-  
-  # Farms (111CA)
   # Load CoA data from flowsa
   CoA <- loadDatafromFLOWSA("Money", year, "USDA_CoA_ProdMarkValue")
   # Select Crops Total and Animal Total
@@ -253,7 +281,6 @@ getAgFisheryForestryCommodityOutput <- function(year) {
   # Re-order columns and drop unwanted columns
   CoA <- CoA[, c("BEA_2012_Summary_Code", "State", "Value", "Ratio")]
   
-  # Fishery and Forestry
   # Load Fishery Landings and Forestry CutValue data from flowsa
   ForestryFishery <- cbind(loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings"),
                            loadDatafromFLOWSA("Money", "2018", "USFS_Forestry"))
@@ -264,14 +291,14 @@ getAgFisheryForestryCommodityOutput <- function(year) {
                                            c("State_FIPS", "FlowAmount")],
                            FIPS_STATE, by = "State_FIPS")
   
-  # Combine CoA with ForestryFishery
+  # Combine CoA and ForestryFishery
   AFF <- rbind(CoA, ForestryFishery)
   return(AFF)
 }
 
 #' Estimate state FAF commodity output ratios
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A dataframe contains state FAF commodity output
+#' @return A data frame contains state FAF commodity output
 #' for specified state with row names being BEA sector code.
 getFAFCommodityOutput <- function(year) {
   # Load state FIPS
@@ -296,10 +323,10 @@ getFAFCommodityOutput <- function(year) {
   allocation_sectors <- SCTGtoBEASummary[duplicated(SCTGtoBEASummary$SCTG) |
                                            duplicated(SCTGtoBEASummary$SCTG, fromLast = TRUE), ]
   allocation_sectors <- allocation_sectors[!allocation_sectors$BEA_2012_Summary_Code%in%c("111CA", "113FF", "311FT"),]
-  # Use BEA State Emp to allocate
-  BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoName", "LineCode", as.character(year))]
-  BEAStateEmptoBEAmapping <- utils::read.table(system.file("extdata", "Crosswalk_StateEmploymenttoBEASummaryIO2012Schema.csv", package = "useeior"),
-                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  # Use State Emp to allocate
+  StateEmp <- getStateEmploymentbyBEASummary(year)
+  # Merge StateEmp with allocation_sectors
+  StateEmp <- merge(StateEmp, allocation_sectors, by = "BEA_2012_Summary_Code")
   # Process FAF for each state
   FAF_state_list <- list()
   for (state in unique(FAF$State)) {
@@ -320,17 +347,9 @@ getFAFCommodityOutput <- function(year) {
                                                                 FAF_state_1$BEA_2012_Summary_Code), sum)
     colnames(FAF_state_1) <- c("State", "BEA_2012_Summary_Code", "Value")
     # Step 2.2. Allocate FAF_state_2 from SCTG to BEA using BEA state employment
-    StateEmployment <- merge(BEAStateEmployment[BEAStateEmployment$GeoName==state, ],
-                             BEAStateEmptoBEAmapping, by = "LineCode")
-    # Aggregate StateEmployment by BEA
-    StateEmployment <- stats::aggregate(StateEmployment[, as.character(year)],
-                                        by = list(StateEmployment$BEA_2012_Summary_Code), sum)
-    colnames(StateEmployment) <- c("BEA_2012_Summary_Code", "Emp")
-    
-    # Merge with allocation_sectors
-    StateEmployment <- merge(StateEmployment, allocation_sectors, by = "BEA_2012_Summary_Code")
+    Emp <- StateEmp[StateEmp$State==state, ]
     # Merge with FAF_state_2
-    FAF_state_2 <- merge(FAF_state_2, StateEmployment, by = c("SCTG", "BEA_2012_Summary_Code"))
+    FAF_state_2 <- merge(FAF_state_2, Emp, by = c("State", "SCTG", "BEA_2012_Summary_Code"))
     for (sctg in unique(FAF_state_2$SCTG)) {
       # Calculate allocation factor
       weight_vector <- FAF_state_2[FAF_state_2$SCTG==sctg, "Emp"]

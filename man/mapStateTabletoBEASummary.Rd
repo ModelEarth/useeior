@@ -12,7 +12,7 @@ mapStateTabletoBEASummary(statetablename, year)
 \item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
-A dataframe contains state value for all states with row names being BEA sector code.
+A data frame contains state value for all states with row names being BEA sector code.
 }
 \description{
 Map state table to BEA Summary, mark sectors that need allocation

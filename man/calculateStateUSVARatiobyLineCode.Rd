@@ -10,7 +10,7 @@ calculateStateUSVARatiobyLineCode(year)
 \item{year}{A numeric value between 2007 and 2017 specifying the year of interest.}
 }
 \value{
-A dataframe contains ratios of state/US GDP (value added) for all states at a specific year by BEA State LineCode.
+A data frame contains ratios of state/US GDP (value added) for all states at a specific year by BEA State LineCode.
 }
 \description{
 Calculate state-US GDP (value added) ratios by BEA State LineCode.
