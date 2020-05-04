@@ -122,9 +122,9 @@ for (state in states) {
   #' Adjust estimated state commodity output
   # Calculate state/US commodit output ratio * US Summary Comm Output
   AdjustedCommodityOutput <- merge(US_Summary_CommodityOutput,
-                                   StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$GeoName==state, ],
+                                   StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$State==state, ],
                                    by.x = 0, by.y = "BEA_2012_Summary_Code")
-  AdjustedCommodityOutput$Output <- AdjustedCommodityOutput$x*AdjustedCommodityOutput$OutputRatio
+  AdjustedCommodityOutput$Output <- AdjustedCommodityOutput$x*AdjustedCommodityOutput$Ratio
   # Replace commodity output value in State_Summary_CommodityOutput_list
   commodities <- AdjustedCommodityOutput$Row.names
   State_Summary_CommodityOutput_list[[state]][commodities, ] <- AdjustedCommodityOutput[AdjustedCommodityOutput$Row.names%in%commodities, "Output"]
@@ -132,12 +132,12 @@ for (state in states) {
   #' Divide current state commodity output ratio by state commodity output ratio from alternative sources.
   # Merge two sets of state-US commodity output ratio
   commodity_ratios <- merge(State_Summary_CommodityOutputRatio_list[[state]],
-                            StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$GeoName==state, ],
+                            StateCommodityOutputRatioAlternative[StateCommodityOutputRatioAlternative$State==state, ],
                             by.x = 0, by.y = "BEA_2012_Summary_Code", all.x = TRUE)
-  # Replace NA in OutputRatio.y with values in OutputRatio.x
-  commodity_ratios[is.na(commodity_ratios$OutputRatio.y), "OutputRatio.y"] <- commodity_ratios[is.na(commodity_ratios$OutputRatio.y), "OutputRatio.x"]
+  # Replace NA in Ratio with values in OutputRatio
+  commodity_ratios[is.na(commodity_ratios$Ratio), "Ratio"] <- commodity_ratios[is.na(commodity_ratios$Ratio), "OutputRatio"]
   # Adjust state Make transactions based on commodity ratios
-  State_Summary_MakeTrasaction_list[[state]] <- State_Summary_MakeTrasaction_list[[state]]%*%diag(commodity_ratios$OutputRatio.y/commodity_ratios$OutputRatio.x)
+  State_Summary_MakeTrasaction_list[[state]] <- State_Summary_MakeTrasaction_list[[state]]%*%diag(commodity_ratios$Ratio/commodity_ratios$OutputRatio)
 }
 
 #' 7 - Vertically stack all state Make trascation tables.
@@ -160,7 +160,7 @@ if (sum(t_c) > sum(t_r)) {
   t_c <- (t_c/sum(t_c))*sum(t_r)
 }
 t <- ToleranceforRAS(t_r, t_c, NULL, 1E6)
-m <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
+State_Summary_MakeTrasaction_balanced <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
 
 #' 9 - Generae MarketShare matrix for US and each state
 # US MS
@@ -184,3 +184,4 @@ for (state in states) {
 }
 
 #' 10 - Save balanced table to .rda with use_data
+usethis::use_data(State_Summary_MakeTrasaction_balanced, overwrite = TRUE)
