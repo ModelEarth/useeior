@@ -145,7 +145,7 @@ calculateStateUSVARatiobyLineCode <- function(year) {
   StateValueAdded_sum <- stats::aggregate(StateValueAdded[, as.character(year)], by = list(StateValueAdded$LineCode), sum)
   colnames(StateValueAdded_sum) <- c("LineCode", as.character(year))
   # Load US ValueAdded from state GDP table
-  GDPtable <- utils::read.table("inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2018.csv", sep = ",",
+  GDPtable <- utils::read.table("inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2019.csv", sep = ",",
                                 header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
   USValueAdded <- GDPtable[GDPtable$GeoName=="United States *", c("LineCode", as.character(year))]
   # Convert values to numeric and to US $
@@ -196,19 +196,18 @@ calculateStateIndustryOutputbyLineCode <- function(year) {
   return(StateGrossOutput)
 }
 
-#' Estimate state commodity output ratios
+#' Estimate state commodity output from alternative sources, calculate ratios.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains state commodity output for specified state with row names being BEA sector code.
 getStateCommodityOutputRatioEstimates <- function(year) {
   # Generate Ag, Fishery, Forestry commodity output
-  AFF <- getAgFisheryForestryCommodityOutput(year)
+  AgFisheryForestry <- getAgFisheryForestryCommodityOutput(year)
   # Generate FAF commodity output
   FAF <- getFAFCommodityOutput(year)
   # Combine all commodity output
-  StateCommodityOutputRatio <- rbind(AFF, FAF)
+  StateCommodityOutputRatio <- rbind(AgFisheryForestry, FAF)
   return(StateCommodityOutputRatio)
 }
-
 
 #' Load flowbyactivity data from FLOWSA
 #' @param flowclass A character value specifying flow class, can be "Money".
@@ -282,18 +281,32 @@ getAgFisheryForestryCommodityOutput <- function(year) {
   CoA <- CoA[, c("BEA_2012_Summary_Code", "State", "Value", "Ratio")]
   
   # Load Fishery Landings and Forestry CutValue data from flowsa
-  ForestryFishery <- cbind(loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings"),
-                           loadDatafromFLOWSA("Money", "2018", "USFS_Forestry"))
+  FisheryForestry <- loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings")
   # Convert State_FIPS to numeric values
-  ForestryFishery$State_FIPS <- as.numeric(substr(ForestryFishery$FIPS, 1, 2))
+  FisheryForestry$State_FIPS <- as.numeric(substr(FisheryForestry$FIPS, 1, 2))
   # Map to state names
-  ForestryFishery <- merge(ForestryFishery[ForestryFishery$Year==year,
+  FisheryForestry <- merge(FisheryForestry[FisheryForestry$Year==year,
                                            c("State_FIPS", "FlowAmount")],
                            FIPS_STATE, by = "State_FIPS")
+  # Combine
+  Forestry <- utils::read.table(system.file("extdata", "ForestProdCutValueFY2012.csv", package = "useeior"),
+                                sep = ",", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
+  colnames(Forestry) <- c("State", "FlowAmount")
+  FisheryForestry <- rbind(FisheryForestry[, c("State", "FlowAmount")],
+                           Forestry[Forestry$State%in%state.name, ])  
+  FisheryForestry <- stats::aggregate(FisheryForestry$FlowAmount,
+                                      by = list(FisheryForestry$State), sum)
+  colnames(FisheryForestry) <- c("State", "Value")
+  # Calculate Commodity Output Ratio
+  FisheryForestry$Ratio <- FisheryForestry$Value/sum(FisheryForestry$Value)
+  # Assign BEA Code
+  FisheryForestry$BEA_2012_Summary_Code <- "113FF"
+  # Re-order columns and drop unwanted columns
+  FisheryForestry <- FisheryForestry[, colnames(CoA)]
   
-  # Combine CoA and ForestryFishery
-  AFF <- rbind(CoA, ForestryFishery)
-  return(AFF)
+  # Combine CoA and FisheryForestry
+  AgFisheryForestry <- rbind(CoA, FisheryForestry)
+  return(AgFisheryForestry)
 }
 
 #' Estimate state FAF commodity output ratios
@@ -328,14 +341,16 @@ getFAFCommodityOutput <- function(year) {
   # Merge StateEmp with allocation_sectors
   StateEmp <- merge(StateEmp, allocation_sectors, by = "BEA_2012_Summary_Code")
   # Process FAF for each state
+  # Generate AFF
+  AgFisheryForestry <- getAgFisheryForestryCommodityOutput(year)
   FAF_state_list <- list()
   for (state in unique(FAF$State)) {
     FAF_state <- FAF[FAF$State==state, ]
     # Step 1. Calculate foods (311FT) as
     # 311FT = (111CA + 113FF + 311FT) - (CoA + ForestryandFishery)
     FAF_total <- sum(FAF[FAF$BEA_2012_Summary_Code%in%c("111CA", "113FF", "311FT"), "Value"])
-    CoAForestryFishery <- sum(CoA, ForestryandFishery)
-    FAF_state[FAF_state$BEA=="331FT", "Value"] <- FAF_total - CoAForestryFishery
+    AFF_total <- sum(AgFisheryForestry[AgFisheryForestry$State==state, "Value"])
+    FAF_state[FAF_state$BEA=="331FT", "Value"] <- FAF_total - AFF_total
     # Drop "111CA" and "113FF" from FAF
     FAF_state <- FAF_state[! FAF_state$BEA_2012_Summary_Code%in%c("111CA", "113FF"), ]
     # Step 2. Separate FAF_state to FAF_state_1 (does not need allocation)
@@ -362,7 +377,13 @@ getFAFCommodityOutput <- function(year) {
                                       sum, na.rm = TRUE)
       colnames(FAF_state_2) <- c("State", "BEA_2012_Summary_Code", "Value")
     }
-    FAF_state_list[[state]] <- rbind(FAF_state_1, FAF_state_2)
+    # Combine FAF_state_1 and FAF_state_2
+    FAF_state_new <- rbind(FAF_state_1, FAF_state_2)
+    # Aggregate by BEA
+    FAF_state_new <- aggregate(FAF_state_new$Value, by = list(FAF_state_new$State,
+                                                              FAF_state_new$BEA_2012_Summary_Code), sum)
+    colnames(FAF_state_new) <- colnames(FAF_state_1)
+    FAF_state_list[[state]] <- FAF_state_new
   }
   FAF <- do.call(rbind, FAF_state_list)
   # Calculate total commodity output ratio
@@ -370,5 +391,7 @@ getFAFCommodityOutput <- function(year) {
     commodity_total <- sum(FAF[FAF$BEA_2012_Summary_Code==commodity, "Value"])
     FAF[FAF$BEA_2012_Summary_Code==commodity, "Ratio"] <- FAF[FAF$BEA_2012_Summary_Code==commodity, "Value"]/commodity_total
   }
+  # Drop rows where Ratio==0
+  FAF <- FAF[FAF$Ratio>0, ]
   return(FAF)
 }
