@@ -2,7 +2,7 @@
 % Please edit documentation in R/StateOutput.R
 \name{getStateCommodityOutputRatioEstimates}
 \alias{getStateCommodityOutputRatioEstimates}
-\title{Estimate state commodity output ratios}
+\title{Estimate state commodity output from alternative sources, calculate ratios.}
 \usage{
 getStateCommodityOutputRatioEstimates(year)
 }
@@ -13,5 +13,5 @@ getStateCommodityOutputRatioEstimates(year)
 A data frame contains state commodity output for specified state with row names being BEA sector code.
 }
 \description{
-Estimate state commodity output ratios
+Estimate state commodity output from alternative sources, calculate ratios.
 }
