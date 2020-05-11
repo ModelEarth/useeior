@@ -18,10 +18,10 @@ StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, allocationweights
 #' 3 - Load US Summary Make table for given year
 #' Generate US Summary Make Transaction and Industry and Commodity Output
 US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"), as.environment("package:useeior"))*1E6
-US_Summary_MakeTrasaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
-                                             -which(colnames(US_Summary_Make)=="Total Industry Output")]
-US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTrasaction)
-US_Summary_CommodityOutput <- colSums(US_Summary_MakeTrasaction)
+US_Summary_MakeTransaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
+                                              -which(colnames(US_Summary_Make)=="Total Industry Output")]
+US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTransaction)
+US_Summary_CommodityOutput <- colSums(US_Summary_MakeTransaction)
 
 #' 4 - Calculate state_US_VA_ratio, for each state and each industry, divide state VA by US VA.
 #' For each state, estimate industry output based on US industry output and state_US_VA_ratio.
@@ -41,7 +41,7 @@ for (state in c(states, "Overseas")) {
   VA_ratio[is.na(VA_ratio$Ratio), "Ratio"] <- 0
   # Re-order state_US_VA_ratio
   rownames(VA_ratio) <- VA_ratio$BEA_2012_Summary_Code
-  VA_ratio <- VA_ratio[rownames(US_Summary_MakeTrasaction), ]
+  VA_ratio <- VA_ratio[rownames(US_Summary_MakeTransaction), ]
   # Calculate State_Summary_IndustryOutput by multiplying US_Summary_IndustryOutput with VA_ratio
   State_Summary_IndustryOutput_list[[state]] <- US_Summary_IndustryOutput*VA_ratio$Ratio
 }
@@ -88,7 +88,7 @@ for (linecode in c("35", "57", "84", "86")) {
   }
 }
 
-State_Summary_MakeTrasaction_list <- list()
+State_Summary_MakeTransaction_list <- list()
 State_Summary_IndustryOutput_list <- list()
 State_Summary_CommodityOutput_list <- list()
 State_Summary_CommodityOutputRatio_list <- list()
@@ -99,14 +99,14 @@ for (state in states) {
   VA_ratio[is.na(VA_ratio$Ratio), "Ratio"] <- 0
   # Re-order state_US_VA_ratio
   rownames(VA_ratio) <- VA_ratio$BEA_2012_Summary_Code
-  VA_ratio <- VA_ratio[rownames(US_Summary_MakeTrasaction), ]
-  # Calculate State_Summary_MakeTrasaction by multiplying US_Summary_MakeTrasaction with VA_ratio
-  State_Summary_MakeTrasaction_list[[state]] <- diag(VA_ratio$Ratio, names = TRUE) %*% as.matrix(US_Summary_MakeTrasaction)
-  rownames(State_Summary_MakeTrasaction_list[[state]]) <- rownames(US_Summary_MakeTrasaction)
+  VA_ratio <- VA_ratio[rownames(US_Summary_MakeTransaction), ]
+  # Calculate State_Summary_MakeTransaction by multiplying US_Summary_MakeTransaction with VA_ratio
+  State_Summary_MakeTransaction_list[[state]] <- diag(VA_ratio$Ratio, names = TRUE) %*% as.matrix(US_Summary_MakeTransaction)
+  rownames(State_Summary_MakeTransaction_list[[state]]) <- rownames(US_Summary_MakeTransaction)
   # Calculate State_Summary_IndustryOutput by multiplying US_Summary_IndustryOutput with VA_ratio
   State_Summary_IndustryOutput_list[[state]] <- US_Summary_IndustryOutput*VA_ratio$Ratio
-  # Calculate State_Summary_CommodityOutput by colSumming State_Summary_MakeTrasaction
-  State_Summary_CommodityOutput_list[[state]] <- as.data.frame(colSums(State_Summary_MakeTrasaction_list[[state]]))
+  # Calculate State_Summary_CommodityOutput by colSumming State_Summary_MakeTransaction
+  State_Summary_CommodityOutput_list[[state]] <- as.data.frame(colSums(State_Summary_MakeTransaction_list[[state]]))
   # Calculate State_Summary_CommodityOutputRatio_list
   State_Summary_CommodityOutputRatio_list[[state]] <- as.data.frame(State_Summary_CommodityOutput_list[[state]]/US_Summary_CommodityOutput)
   colnames(State_Summary_CommodityOutputRatio_list[[state]]) <- "OutputRatio"
@@ -137,22 +137,23 @@ for (state in states) {
   # Replace NA in Ratio with values in OutputRatio
   commodity_ratios[is.na(commodity_ratios$Ratio), "Ratio"] <- commodity_ratios[is.na(commodity_ratios$Ratio), "OutputRatio"]
   # Adjust state Make transactions based on commodity ratios
-  State_Summary_MakeTrasaction_list[[state]] <- State_Summary_MakeTrasaction_list[[state]]%*%diag(commodity_ratios$Ratio/commodity_ratios$OutputRatio)
+  State_Summary_MakeTransaction_list[[state]] <- State_Summary_MakeTransaction_list[[state]]%*%diag(commodity_ratios$Ratio/commodity_ratios$OutputRatio)
 }
 
 #' 7 - Vertically stack all state Make trascation tables.
-State_Summary_MakeTrasaction <- do.call(rbind, State_Summary_MakeTrasaction_list)
-rownames(State_Summary_MakeTrasaction) <- paste(rep(names(State_Summary_MakeTrasaction_list),
-                                                    each = nrow(State_Summary_MakeTrasaction_list[[1]])),
-                                                rep(rownames(State_Summary_MakeTrasaction_list[[1]]),
-                                                    time = length(names(State_Summary_MakeTrasaction_list))),
-                                                sep = ".")
+State_Summary_MakeTransaction <- do.call(rbind, State_Summary_MakeTransaction_list)
+rownames(State_Summary_MakeTransaction) <- paste(rep(names(State_Summary_MakeTransaction_list),
+                                                     each = nrow(State_Summary_MakeTransaction_list[[1]])),
+                                                 rep(rownames(State_Summary_MakeTransaction_list[[1]]),
+                                                     time = length(names(State_Summary_MakeTransaction_list))),
+                                                 sep = ".")
+colnames(State_Summary_MakeTransaction) <- colnames(US_Summary_MakeTransaction)
 
 #' 8 - Perform RAS until model is balanced
 #' Apply RAS balancing to the entire Make table
-m0 <- State_Summary_MakeTrasaction
+m0 <- State_Summary_MakeTransaction
 t_r <- as.numeric(unlist(State_Summary_IndustryOutput_list))
-t_c <- as.numeric(colSums(US_Summary_MakeTrasaction))
+t_c <- as.numeric(colSums(US_Summary_MakeTransaction))
 # Adjust t_c/t_r, make sum(t_c)==sum(t_r)
 if (sum(t_c) > sum(t_r)) {
   t_r <- (t_r/sum(t_r))*sum(t_c)
@@ -160,15 +161,16 @@ if (sum(t_c) > sum(t_r)) {
   t_c <- (t_c/sum(t_c))*sum(t_r)
 }
 t <- ToleranceforRAS(t_r, t_c, NULL, 1E6)
-State_Summary_MakeTrasaction_balanced <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
+State_Summary_MakeTransaction_balanced <- RAS(m0, t_r, t_c, t, max_itr = 1E6)
+colnames(State_Summary_MakeTransaction_balanced) <- colnames(m0)
 
 #' 9 - Generae MarketShare matrix for US and each state
 # US MS
-US_Summary_MarketShare <- normalizeIOTransactions(US_Summary_MakeTrasaction, US_Summary_CommodityOutput)
+US_Summary_MarketShare <- normalizeIOTransactions(US_Summary_MakeTransaction, US_Summary_CommodityOutput)
 # State MS
 State_Summary_MarketShare_list <- list()
 for (state in states) {
-  StateMS <- normalizeIOTransactions(State_Summary_MakeTrasaction_list[[state]],
+  StateMS <- normalizeIOTransactions(State_Summary_MakeTransaction_list[[state]],
                                      State_Summary_CommodityOutput_list[[state]])
   # print(paste(state, max(StateMS)))
   # print(paste(state, min(StateMS)))
@@ -183,5 +185,8 @@ for (state in states) {
                                                           State_Summary_MarketShare_list[[state]])
 }
 
-#' 10 - Save balanced table to .rda with use_data
-usethis::use_data(State_Summary_MakeTrasaction_balanced, overwrite = TRUE)
+#' 10 - Save state industry output estimates and balanced Make table to .rda
+save(State_Summary_MakeTransaction_balanced,
+     file = paste0("data/State_Summary_Make_", year, ".rda"))
+save(State_Summary_IndustryOutput_list,
+     file = paste0("data/State_Summary_IndustryOutput_", year, ".rda"))
