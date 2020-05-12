@@ -4,7 +4,7 @@
 #' 1 - Load state industry output for the given year.
 year <- 2012
 load(paste0("data/State_Summary_IndustryOutput_", year, ".rda"))
-State_Summary_IndustryOutput <- do.call(rbind)
+states <- names(State_Summary_IndustryOutput_list)
 
 #' 2 - Load US Summary Make table for given year
 #' Generate US Summary Industry Output
@@ -22,7 +22,7 @@ US_Summary_UseTransaction <- US_Summary_Use[colnames(US_Summary_MakeTransaction)
 #' 4 - Calculate state_US_IndustryOutput_ratio, for each state and each industry,
 #' Divide state IndustryOutput by US IndustryOutput.
 State_Summary_UseTransaction_list <- list()
-for (state in names(State_Summary_IndustryOutput_list)) {
+for (state in states) {
   IndustryOutputRatio <- State_Summary_IndustryOutput_list[[state]]/US_Summary_IndustryOutput
   State_Summary_UseTransaction_list[[state]] <- as.matrix(US_Summary_UseTransaction) %*% diag(IndustryOutputRatio)
   colnames(State_Summary_UseTransaction_list[[state]]) <- colnames(US_Summary_UseTransaction)
@@ -36,3 +36,13 @@ colnames(State_Summary_UseTransaction) <- paste(rep(names(State_Summary_UseTrans
                                                      time = length(names(State_Summary_UseTransaction_list))),
                                                  sep = ".")
 rownames(State_Summary_UseTransaction) <- rownames(US_Summary_UseTransaction)
+
+#' 6 - Validate if state totals == national total
+# Row sum
+rowSums(State_Summary_UseTransaction) - rowSums(US_Summary_UseTransaction)
+# Column sum
+State_CommInputTotal_list <- list()
+for (industry in colnames(US_Summary_UseTransaction)) {
+  State_CommInputTotal_list[[industry]] <- sum(State_Summary_UseTransaction[, paste(states, industry, sep = ".")])
+}
+unlist(State_CommInputTotal_list) - colSums(US_Summary_UseTransaction)
