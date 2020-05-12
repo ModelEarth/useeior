@@ -791,3 +791,25 @@
 #' }
 #' @source \url{https://apps.bea.gov/API/signup/index.cfm}
 "State_Employment_2009_2018"
+
+#' State PCE table (2007-2018)
+#' @format A data frame with 1224 obs. and 15 variables
+#' \describe{
+#'  \item{GeoName}{text code}
+#'  \item{Line}{integer}
+#'  \item{Description}{text code}
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#'  \item{2018}{current year USD}
+#' }
+#' @source \url{https://apps.bea.gov/regional/zip/SAEXP.zip}
+"State_PCE_2007_2018"

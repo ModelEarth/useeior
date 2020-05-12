@@ -803,13 +803,13 @@ getBEAStateData <- function (dataname) {
   }
   # Determine data filename
   if (dataname=="GDP") {
-    FileName <- "inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2018.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2019.csv"
   } else if (dataname=="Tax") {
-    FileName <- "inst/extdata/SAGDP/SAGDP3N__ALL_AREAS_1997_2018.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP3N__ALL_AREAS_1997_2019.csv"
   } else if (dataname=="Compensation") {
-    FileName <- "inst/extdata/SAGDP/SAGDP4N__ALL_AREAS_1997_2018.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP4N__ALL_AREAS_1997_2019.csv"
   } else if (dataname=="GOS") {
-    FileName <- "inst/extdata/SAGDP/SAGDP7N__ALL_AREAS_1997_2018.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP7N__ALL_AREAS_1997_2019.csv"
   }
   # Load state data
   StateData <- utils::read.table(FileName, sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
@@ -827,7 +827,6 @@ getBEAStateData <- function (dataname) {
   # Keep state-level data
   StateData <- StateData[StateData$GeoName %in% c(state.name, "District of Columbia"),
                          c("GeoName", "LineCode", "Description", as.character(2007:2018))]
-  
   return(StateData)
 }
 State_GDP_2007_2018 <- getBEAStateData("GDP")
@@ -874,3 +873,31 @@ getBEAStateEmployment <- function () {
 State_Employment_2009_2018 <- getBEAStateEmployment()
 usethis::use_data(State_Employment_2009_2018, overwrite = TRUE)
 
+# Get state PCE (personal consumption expenditures) 2007-2018
+getBEAStatePCE <- function () {
+  # Create the placeholder file
+  StatePCEzip <- "inst/extdata/SAEXP.zip"
+  # Download all BEA IO tables into the placeholder file
+  if(!file.exists(StatePCEzip)) {
+    download.file("https://apps.bea.gov/regional/zip/SAEXP.zip", StatePCEzip, mode = "wb")
+    # Get the name of all files in the zip archive
+    fname <- unzip(StatePCEzip, list = TRUE)[unzip(StatePCEzip, list = TRUE)$Length > 0, ]$Name
+    # Unzip the file to the designated directory
+    unzip(StatePCEzip, files = fname, exdir = "inst/extdata/SAEXP", overwrite = TRUE)
+  }
+  # Load state PCE data
+  StatePCE <- utils::read.table("inst/extdata/SAEXP/SAEXP1__ALL_AREAS_1997_2018.csv",
+                                sep = ",", header = TRUE, stringsAsFactors = FALSE,
+                                check.names = FALSE, fill = TRUE)
+  StatePCE <- StatePCE[!is.na(StatePCE$Line), ]
+  # Replace NA with zero
+  StatePCE[is.na(StatePCE)] <- 0
+  # Convert values to current US $
+  StatePCE[, as.character(2007:2018)] <- StatePCE[, as.character(2007:2018)]*1E6
+  # Keep state-level data
+  StatePCE <- StatePCE[StatePCE$GeoName %in% c(state.name, "District of Columbia"),
+                       c("GeoName", "Line", "Description", as.character(2007:2018))]
+  return(StatePCE)
+}
+State_PCE_2007_2018 <- getBEAStatePCE()
+usethis::use_data(State_PCE_2007_2018, overwrite = TRUE)
