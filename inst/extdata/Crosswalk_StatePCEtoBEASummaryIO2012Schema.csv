@@ -1,0 +1,83 @@
+Line,Description,BEA_2012_Summary_Code
+1,Personal consumption expenditures,
+2, Goods,
+3,  Durable goods,
+4,   Motor vehicles and parts,326
+4,   Motor vehicles and parts,3361MV
+5,   Furnishings and durable household equipment,212
+5,   Furnishings and durable household equipment,327
+5,   Furnishings and durable household equipment,332
+5,   Furnishings and durable household equipment,333
+5,   Furnishings and durable household equipment,334
+5,   Furnishings and durable household equipment,335
+5,   Furnishings and durable household equipment,337
+6,   Recreational goods and vehicles,332
+6,   Recreational goods and vehicles,333
+6,   Recreational goods and vehicles,334
+6,   Recreational goods and vehicles,3361MV
+6,   Recreational goods and vehicles,3364OT
+7,   Other durable goods,334
+7,   Other durable goods,339
+8,  Nondurable goods,
+9,   Food and beverages purchased for off-premises consumption,111CA
+9,   Food and beverages purchased for off-premises consumption,113FF
+9,   Food and beverages purchased for off-premises consumption,311FT
+10,   Clothing and footwear,313TT
+10,   Clothing and footwear,315AL
+11,   Gasoline and other energy goods,212
+11,   Gasoline and other energy goods,324
+12,   Other nondurable goods,311FT
+12,   Other nondurable goods,313TT
+12,   Other nondurable goods,322
+12,   Other nondurable goods,323
+12,   Other nondurable goods,325
+12,   Other nondurable goods,326
+12,   Other nondurable goods,335
+12,   Other nondurable goods,339
+13, Services,
+14,  Household consumption expenditures (for services),
+15,   Housing and utilities,22
+15,   Housing and utilities,ORE
+15,   Housing and utilities,561
+15,   Housing and utilities,562
+15,   Housing and utilities,721
+16,   Health care,621
+16,   Health care,622
+16,   Health care,623
+17,   Transportation services,441
+17,   Transportation services,481
+17,   Transportation services,482
+17,   Transportation services,483
+17,   Transportation services,484
+17,   Transportation services,485
+17,   Transportation services,486
+17,   Transportation services,532RL
+17,   Transportation services,81
+18,   Recreation services,487OS
+18,   Recreation services,5412OP
+18,   Recreation services,561
+18,   Recreation services,711AS
+18,   Recreation services,713
+18,   Recreation services,81
+19,   Food services and accommodations,445
+19,   Food services and accommodations,722
+20,   Financial services and insurance,521CI
+20,   Financial services and insurance,523
+20,   Financial services and insurance,525
+21,   Other services,452
+21,   Other services,GFE
+21,   Other services,487OS
+21,   Other services,493
+21,   Other services,511
+21,   Other services,512
+21,   Other services,513
+21,   Other services,514
+21,   Other services,5411
+21,   Other services,5412OP
+21,   Other services,561
+21,   Other services,61
+21,   Other services,624
+21,   Other services,81
+22,  Final consumption expenditures of nonprofit institutions serving households (NPISHs),
+23,   Gross output of nonprofit institutions,GSLE
+24,   Less: Receipts from sales of goods and services by nonprofit institutions,GSLE
