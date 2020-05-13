@@ -28,14 +28,14 @@ for (state in states) {
   colnames(State_Summary_UseTransaction_list[[state]]) <- colnames(US_Summary_UseTransaction)
 }
 
-#' 5 - Horizontally stack all state Use trascation tables.
-State_Summary_UseTransaction <- do.call(cbind, State_Summary_UseTransaction_list)
-colnames(State_Summary_UseTransaction) <- paste(rep(names(State_Summary_UseTransaction_list),
-                                                     each = ncol(State_Summary_UseTransaction_list[[1]])),
-                                                 rep(colnames(State_Summary_UseTransaction_list[[1]]),
-                                                     time = length(names(State_Summary_UseTransaction_list))),
-                                                 sep = ".")
-rownames(State_Summary_UseTransaction) <- rownames(US_Summary_UseTransaction)
+#' 5 - Vertically stack all state Use trascation tables.
+State_Summary_UseTransaction <- do.call(rbind, State_Summary_UseTransaction_list)
+rownames(State_Summary_UseTransaction) <- paste(rep(names(State_Summary_UseTransaction),
+                                                    each = nrow(State_Summary_UseTransaction[[1]])),
+                                                rep(rownames(State_Summary_UseTransaction[[1]]),
+                                                    time = length(names(State_Summary_UseTransaction))),
+                                                sep = ".")
+colnames(State_Summary_UseTransaction) <- colnames(US_Summary_UseTransaction)
 
 #' 6 - Validate if state totals == national total
 # Row sum
