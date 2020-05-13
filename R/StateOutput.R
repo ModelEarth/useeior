@@ -154,9 +154,9 @@ calculateStateUSVARatiobyLineCode <- function(year) {
   OverseasValueAdded <- merge(StateValueAdded_sum, USValueAdded, by = "LineCode")
   OverseasValueAdded[, as.character(year)] <- OverseasValueAdded[, paste0(year, ".y")] - OverseasValueAdded[, paste0(year, ".x")]
   OverseasValueAdded$GeoName <- "Overseas"
-  # Append Overseas VA to StateUSValueAdded
+  # Append Overseas VA to StateValueAdded
   StateValueAdded <- rbind(StateValueAdded, OverseasValueAdded[, colnames(StateValueAdded)])
-  # MergeLineCode-coded State and US ValueAdded
+  # Merge state and US ValueAdded by LineCode
   StateUSValueAdded <- merge(StateValueAdded, USValueAdded, by = "LineCode")
   # Calculate the state-US ValueAdded ratios by LineCode
   StateUSValueAdded$Ratio <- StateUSValueAdded[, paste0(year, ".x")]/StateUSValueAdded[, paste0(year, ".y")]
@@ -220,7 +220,7 @@ loadDatafromFLOWSA <- function(flowclass, year, datasource) {
   library(reticulate)
   flowsa <- import("flowsa")
   # Load data
-  df <- flowsa$getFlowByActivity(flowclass, list(as.character(year)), datasource)
+  df <- flowsa$getFlowByActivity(list(flowclass), list(as.character(year)), datasource)
   return(df)
 }
 
@@ -240,7 +240,7 @@ getStateEmploymentbyBEASummary <- function(year) {
                                                    BEAStateEmployment$GeoName), sum)
   colnames(BEAStateEmployment) <- c("BEA_2012_Summary_Code", "State", "Emp")
   # BLS QCEW Emp
-  BLS_QCEW <- loadDatafromFLOWSA("Employment", year, "BLS_QCEW_EMP")
+  BLS_QCEW <- loadDatafromFLOWSA("Employment", year, "BLS_QCEW")
   BLS_QCEW <- mapBLSQCEWtoBEA(BLS_QCEW, year, "Summary")
   BLS_QCEW$FIPS <- as.numeric(substr(BLS_QCEW$FIPS, 1, 2))
   FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
@@ -262,38 +262,31 @@ getAgFisheryForestryCommodityOutput <- function(year) {
   # Load state FIPS
   FIPS_STATE <- utils::read.table(system.file("extdata", "StateFIPS.csv", package = "useeior"),
                                   sep = ",", header = TRUE, check.names = FALSE)
-  # Load CoA data from flowsa
-  CoA <- loadDatafromFLOWSA("Money", year, "USDA_CoA_ProdMarkValue")
-  # Select Crops Total and Animal Total
-  CoA <- CoA[CoA$ActivityProducedBy%in%c("CROP TOTALS", "ANIMAL TOTALS, INCL PRODUCTS"), ]
-  # Aggregate FlowAmount by FIPS
-  CoA <- stats::aggregate(CoA$FlowAmount, by = list(CoA$FIPS), sum)
-  colnames(CoA) <- c("State_FIPS", "Value")
+  # Load USDA_ERS_FIWS data from flowsa
+  USDA_ERS_FIWS <- loadDatafromFLOWSA("Money", year, "USDA_ERS_FIWS")
+  # Select All Commodities as Ag products
+  Ag <- USDA_ERS_FIWS[USDA_ERS_FIWS$ActivityProducedBy=="All Commodities", ]
   # Convert State_FIPS to numeric values
-  CoA$State_FIPS <- as.numeric(substr(CoA$State_FIPS, 1, 2))
+  Ag$State_FIPS <- as.numeric(Ag$Location)
   # Map to state names
-  CoA <- merge(CoA, FIPS_STATE, by = "State_FIPS")
+  Ag <- merge(Ag, FIPS_STATE, by = "State_FIPS")
   # Calculate Commodity Output Ratio
-  CoA$Ratio <- CoA$Value/sum(CoA$Value)
+  Ag$Ratio <- Ag$FlowAmount/sum(Ag$FlowAmount)
   # Assign BEA Code
-  CoA$BEA_2012_Summary_Code <- "111CA"
+  Ag$BEA_2012_Summary_Code <- "111CA"
+  Ag$Value <- Ag$FlowAmount
   # Re-order columns and drop unwanted columns
-  CoA <- CoA[, c("BEA_2012_Summary_Code", "State", "Value", "Ratio")]
+  Ag <- Ag[, c("BEA_2012_Summary_Code", "State", "Value", "Ratio")]
   
   # Load Fishery Landings and Forestry CutValue data from flowsa
-  FisheryForestry <- loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings")
+  Fishery <- loadDatafromFLOWSA("Money", "2012-2018", "NOAA_FisheryLandings")
+  FisheryForestry <- rbind(Fishery[Fishery$Year==year, ],
+                           USDA_ERS_FIWS[USDA_ERS_FIWS$ActivityProducedBy=="Forest products", ])
   # Convert State_FIPS to numeric values
-  FisheryForestry$State_FIPS <- as.numeric(substr(FisheryForestry$FIPS, 1, 2))
+  FisheryForestry$State_FIPS <- as.numeric(substr(FisheryForestry$Location, 1, 2))
   # Map to state names
-  FisheryForestry <- merge(FisheryForestry[FisheryForestry$Year==year,
-                                           c("State_FIPS", "FlowAmount")],
+  FisheryForestry <- merge(FisheryForestry[, c("State_FIPS", "FlowAmount")],
                            FIPS_STATE, by = "State_FIPS")
-  # Combine
-  Forestry <- utils::read.table(system.file("extdata", "ForestProdCutValueFY2012.csv", package = "useeior"),
-                                sep = ",", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
-  colnames(Forestry) <- c("State", "FlowAmount")
-  FisheryForestry <- rbind(FisheryForestry[, c("State", "FlowAmount")],
-                           Forestry[Forestry$State%in%state.name, ])  
   FisheryForestry <- stats::aggregate(FisheryForestry$FlowAmount,
                                       by = list(FisheryForestry$State), sum)
   colnames(FisheryForestry) <- c("State", "Value")
@@ -302,10 +295,10 @@ getAgFisheryForestryCommodityOutput <- function(year) {
   # Assign BEA Code
   FisheryForestry$BEA_2012_Summary_Code <- "113FF"
   # Re-order columns and drop unwanted columns
-  FisheryForestry <- FisheryForestry[, colnames(CoA)]
+  FisheryForestry <- FisheryForestry[, colnames(Ag)]
   
-  # Combine CoA and FisheryForestry
-  AgFisheryForestry <- rbind(CoA, FisheryForestry)
+  # Combine Ag and FisheryForestry
+  AgFisheryForestry <- rbind(Ag, FisheryForestry)
   return(AgFisheryForestry)
 }
 
@@ -347,7 +340,7 @@ getFAFCommodityOutput <- function(year) {
   for (state in unique(FAF$State)) {
     FAF_state <- FAF[FAF$State==state, ]
     # Step 1. Calculate foods (311FT) as
-    # 311FT = (111CA + 113FF + 311FT) - (CoA + ForestryandFishery)
+    # 311FT = (111CA + 113FF + 311FT) - (Ag + ForestryandFishery)
     FAF_total <- sum(FAF[FAF$BEA_2012_Summary_Code%in%c("111CA", "113FF", "311FT"), "Value"])
     AFF_total <- sum(AgFisheryForestry[AgFisheryForestry$State==state, "Value"])
     FAF_state[FAF_state$BEA=="331FT", "Value"] <- FAF_total - AFF_total
