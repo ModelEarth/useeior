@@ -5,6 +5,8 @@ SchemaInfo <- utils::read.table(system.file("extdata", "2012_Summary_Schema_Info
 getVectorOfCodes <- function(colName) {
   return(as.vector(stats::na.omit(SchemaInfo[, c("Code", colName)])[, "Code"]))
 }
+Commodities <- getVectorOfCodes("Commodity")
+Industries <- getVectorOfCodes("Industry")
 HouseholdDemandCodes <- getVectorOfCodes("HouseholdDemand")
 InvestmentDemandCodes <- getVectorOfCodes("InvestmentDemand")
 ImportCodes <- getVectorOfCodes("Import")
@@ -49,6 +51,8 @@ calculateStateUSPCERatio <- function(year) {
       StateUSPCE[StateUSPCE$GeoName==state&StateUSPCE$BEA_2012_Summary_Code==sector, "Ratio"] <- adjustedratio
     }
   }
+  # Replace NaN with zero
+  StateUSPCE[is.na(StateUSPCE$Ratio), "Ratio"] <- 0
   StateUSPCE$State <- StateUSPCE$GeoName
   # Keep wanted columns
   StateUSPCE <- unique(StateUSPCE[order(StateUSPCE$State, StateUSPCE$BEA_2012_Summary_Code),
@@ -56,3 +60,18 @@ calculateStateUSPCERatio <- function(year) {
   return(StateUSPCE)
 }
 
+#' Estimate state household demand at BEA Summary level.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state household demand for all states at a specific year at BEA Summary level.
+estimateStateHouseholdDemand <- function(year) {
+  US_Summary_Use <- get(paste("Summary_Use", year, "PRO_BeforeRedef", sep = "_"), as.environment("package:useeior"))
+  US_HouseholdDemand <- US_Summary_Use[Commodities, HouseholdDemandCodes, drop = FALSE]
+  PCE_ratio <- calculateStateUSPCERatio(year)
+  State_HouseholdDemand <- data.frame()
+  for (state in unique(PCE_ratio$State)) {
+    HouseholdDemand <- US_HouseholdDemand * PCE_ratio[PCE_ratio$State==state, "Ratio"]
+    rownames(HouseholdDemand) <- paste(rownames(HouseholdDemand), state, sep = ".")
+    State_HouseholdDemand <- rbind.data.frame(State_HouseholdDemand, HouseholdDemand)
+  }
+  return(State_HouseholdDemand)
+}
