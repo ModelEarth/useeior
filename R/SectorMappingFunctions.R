@@ -12,12 +12,12 @@ mapBLSQCEWtoBEA <- function (bls_qcew, year, iolevel) {
   NAICStoBEA <- NAICStoBEA[!is.na(NAICStoBEA[, "NAICS_2012_Code"]),]
   BEAColumns <- paste("BEA_2012", c("Sector", "Summary", "Detail"), "Code", sep = "_")
   # Merge bls_qcew with NAICStoBEA
-  bls_qcew <- merge(bls_qcew[, c("FIPS", "ActivityProducedBy", "FlowAmount")],
+  bls_qcew <- merge(bls_qcew[, c("Location", "ActivityProducedBy", "FlowAmount")],
                     NAICStoBEA, by.x = "ActivityProducedBy", by.y = "NAICS_2012_Code")
   # Create BEA-coded bls_qcew table for each FIPS
   QCEW_BEA_list <- list()
-  for (fips in unique(bls_qcew$FIPS)) {
-    bls_qcew_fips <- bls_qcew[bls_qcew$FIPS==fips, ]
+  for (fips in unique(bls_qcew$Location)) {
+    bls_qcew_fips <- bls_qcew[bls_qcew$Location==fips, ]
     QCEW_BEA <- as.data.frame(matrix(0, nrow = nrow(unique(NAICStoBEA[, BEAColumns])), ncol = 4))
     colnames(QCEW_BEA) <- c(BEAColumns, "FlowAmount")
     QCEW_BEA[, BEAColumns] <- unique(NAICStoBEA[, BEAColumns])
