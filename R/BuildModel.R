@@ -106,7 +106,7 @@ buildEEIOModel <- function(modelname) {
   for (table in model$SatelliteTables$coeffs_by_sector) {
     StandardizedSatelliteTable <- rbind(StandardizedSatelliteTable, table)
   }
-  # ransform into a flow x sector matrix
+  # transform into a flow x sector matrix
   StandardizedSatelliteTable["Flow"] <- apply(StandardizedSatelliteTable[, c("FlowName", "FlowCategory", "FlowSubCategory", "FlowUnit")],
                                               1 ,FUN = joinStringswithSlashes)
   StandardizedSatelliteTable["Sector"] <- apply(StandardizedSatelliteTable[, c("ProcessCode", "ProcessLocation")], 1, FUN = joinStringswithSlashes)
@@ -124,7 +124,7 @@ buildEEIOModel <- function(modelname) {
   # Generate B matrix
   model$B <- as.matrix(sattables_cast)
 
-  # Transform B into a flowxcommodity matrix using market shares matrix for commodity models
+  # Transform B into a flow x commodity matrix using market shares matrix for commodity models
   if(model$specs$CommoditybyIndustryType == "Commodity") {
     model$B <- model$B %*% model$V_n
     colnames(model$B) <- tolower(paste(colnames(model$B), model$specs$PrimaryRegionAcronym, sep = "/"))
