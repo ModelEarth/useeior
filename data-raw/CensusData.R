@@ -1,0 +1,92 @@
+#' Get US import/export table from usatrade.census.gov, and convert it to Census import/export table format.
+#' @param year A numeric value between 2012 and 2017 specifying the year of interest.
+#' @param flow_ratio_type Type of commodity flow, can be "export" or "import".
+getCensusUSATradebyNAICS <- function (year, flow_ratio_type) {
+  # Load the downloaded table from usatrade.census.gov
+  filename <- paste0("Census_USATrade", Hmisc::capitalize(flow_ratio_type), "_", year, ".csv")
+  table <- utils::read.table(system.file("extdata", filename, package = "useeior"),
+                             sep = ",", header = FALSE, stringsAsFactors = FALSE, check.names = FALSE, skip = 4,
+                             col.names = c("Commodity", "State", "Country", "Year", "Value"))
+  # Keep rows for the specified year and drop "All Commodities"
+  table <- table[table$Year==year & !table$Commodity=="All Commodities", ]
+  # Change state name from "Dist of Columbia" to "Disctrict of Columbia"
+  table[table$State=="Dist of Columbia", "State"] <- "Disctrict of Columbia"
+  # Drop "All States" and non-state rows
+  table <- table[table$State %in% c(state.name, "Disctrict of Columbia"), ]
+  # Create NAICS
+  table$NAICS <- as.integer(do.call(rbind, strsplit(table$Commodity, "\\ "))[, 1])
+  # Convert trade value to numeric
+  table$Value <- as.numeric(gsub(",", "", table$Value))
+  # Re-order columns
+  table <- table[, c("State", "Year", "NAICS", "Value")]
+  return(table)
+}
+
+Census_USATradeExport_2012 <- getCensusUSATradebyNAICS(2012, "export")
+usethis::use_data(Census_USATradeExport_2012, overwrite = TRUE)
+Census_USATradeImport_2012 <- getCensusUSATradebyNAICS(2012, "import")
+usethis::use_data(Census_USATradeImport_2012, overwrite = TRUE)
+
+#' Get Census export data for specified year by NAICS
+#' Find guide at https://www.census.gov/foreign-trade/reference/guides/Guide%20to%20International%20Trade%20Datasets.pdf
+#' @param year A numeric value between 2013 and 2017 specifying the year of interest.
+#' @return A data frame contains state export data by NAICS for the specified year.
+getCensusStateExportbyNAICS <- function(year) {
+  # Create URL
+  # Use "CTY_NAME" instead of "CTY_CODE" to pull "TOTAL FOR ALL COUNTRIES" only
+  # Use "MONTH=12" to pull Year-to-Date import values
+  baseurl <- paste0("https://api.census.gov/data/timeseries/intltrade/exports/statenaics?get=NAICS,CTY_NAME,STATE,ALL_VAL_YR&YEAR=", year, "&MONTH=12")
+  # Download table and convert to dataframe
+  export <- as.data.frame(jsonlite::fromJSON(baseurl), stringsAsFactors = FALSE)[-1, -6]
+  # Add column names
+  colnames(export) <- c("NAICS", "CTY_NAME", "STATE", "ALL_VAL_YR", "YEAR")
+  # Convert specific columns to numeric format
+  export[, c("ALL_VAL_YR", "YEAR")] <- sapply(export[, c("ALL_VAL_YR", "YEAR")], as.numeric)
+  # Keep export by state (!STATE=="")
+  export_states <- export[!export$NAICS==""&!export$STATE=="", ]
+  return (export_states)
+}
+Census_StateExport_2013 <- getCensusStateExportbyNAICS(2013)
+usethis::use_data(Census_StateExport_2013, overwrite = TRUE)
+Census_StateExport_2014 <- getCensusStateExportbyNAICS(2014)
+usethis::use_data(Census_StateExport_2014, overwrite = TRUE)
+Census_StateExport_2015 <- getCensusStateExportbyNAICS(2015)
+usethis::use_data(Census_StateExport_2015, overwrite = TRUE)
+Census_StateExport_2016 <- getCensusStateExportbyNAICS(2016)
+usethis::use_data(Census_StateExport_2016, overwrite = TRUE)
+Census_StateExport_2017 <- getCensusStateExportbyNAICS(2017)
+usethis::use_data(Census_StateExport_2017, overwrite = TRUE)
+Census_StateExport_2018 <- getCensusStateExportbyNAICS(2018)
+usethis::use_data(Census_StateExport_2018, overwrite = TRUE)
+
+#' Get Census import data for specified year by NAICS
+#' Find guide at https://www.census.gov/foreign-trade/reference/guides/Guide%20to%20International%20Trade%20Datasets.pdf
+#' @param year A numeric value between 2013 and 2017 specifying the year of interest.
+#' @return A data frame contains state import data by NAICS for the specified year.
+getCensusStateImportbyNAICS <- function (year) {
+  # Create URL
+  # Use "CTY_NAME" instead of "CTY_CODE" to pull "TOTAL FOR ALL COUNTRIES" only
+  # Use "MONTH=12" to pull Year-to-Date import values
+  baseurl <- paste0("https://api.census.gov/data/timeseries/intltrade/imports/statenaics?get=NAICS,CTY_NAME,STATE,GEN_VAL_YR&YEAR=", year, "&MONTH=12")
+  # Download table and convert to dataframe
+  import <- as.data.frame(jsonlite::fromJSON(baseurl), stringsAsFactors = FALSE)[-1, -6]
+  # Add column names
+  colnames(import) <- c("NAICS", "CTY_NAME", "STATE", "GEN_VAL_YR", "YEAR")
+  # Convert specific columns to numeric format
+  import[, c("GEN_VAL_YR", "YEAR")] <- sapply(import[, c("GEN_VAL_YR", "YEAR")], as.numeric)
+  # Keep import by state (!STATE=="")
+  import_states <- import[!import$NAICS==""&!import$STATE=="", ]
+  return (import_states)
+}
+Census_StateImport_2013 <- getCensusStateImportbyNAICS(2013)
+usethis::use_data(Census_StateImport_2013, overwrite = TRUE)
+Census_StateImport_2014 <- getCensusStateImportbyNAICS(2014)
+usethis::use_data(Census_StateImport_2014, overwrite = TRUE)
+Census_StateImport_2015 <- getCensusStateImportbyNAICS(2015)
+usethis::use_data(Census_StateImport_2015, overwrite = TRUE)
+Census_StateImport_2016 <- getCensusStateImportbyNAICS(2016)
+usethis::use_data(Census_StateImport_2016, overwrite = TRUE)
+Census_StateImport_2017 <- getCensusStateImportbyNAICS(2017)
+usethis::use_data(Census_StateImport_2017, overwrite = TRUE)
+Census_StateImport_2018 <- getCensusStateImportbyNAICS(2018)
+usethis::use_data(Census_StateImport_2018, overwrite = TRUE)
