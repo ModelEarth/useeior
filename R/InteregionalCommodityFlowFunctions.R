@@ -21,13 +21,19 @@ calculateLocalandTradedRatios <- function (state, year, SoI = TRUE, ioschema, io
   # Merge with BEAtoTradedorLocal
   StateCommOutput <- merge(unique(BEAtoTradedorLocal[, c(bea_code, "Type")]),
                            StateCommOutput, by.x = bea_code, by.y = 0)
+  if (SoI == FALSE) {
+    US_Make <- get(paste(iolevel, "Make", year, "BeforeRedef", sep = "_"))*1E6
+    USCommOutput <- colSums(US_Make[-which(rownames(US_Make)=="Total Commodity Output"),
+                                    -which(colnames(US_Make)=="Total Industry Output")])
+    StateCommOutput <- merge(StateCommOutput, USCommOutput, by.x = bea_code, by.y = 0)
+    StateCommOutput$CommodityOutput <- StateCommOutput$y - StateCommOutput$CommodityOutput
+  }
   # Transform table from long to wide
-  StateCommOutput <- reshape2::dcast(StateCommOutput, paste(bea_code, "~ Type"), value.var = "CommodityOutput")
-  StateCommOutput[is.na(StateCommOutput)] <- 0
+  LocalorTraded <- reshape2::dcast(StateCommOutput, paste(bea_code, "~ Type"), value.var = "CommodityOutput")
+  LocalorTraded[is.na(LocalorTraded)] <- 0
   # Calculate local and traded ratios
-  StateCommOutput$LocalRatio <- StateCommOutput$Local/(StateCommOutput$Local+StateCommOutput$Traded)
-  StateCommOutput$TradedRatio <- StateCommOutput$Traded/(StateCommOutput$Local+StateCommOutput$Traded)
-  LocalandTradedRatiosbyBEA <- StateCommOutput[, c(bea_code, "LocalRatio", "TradedRatio")]
+  LocalorTraded$LocalRatio <- LocalorTraded$Local/(LocalorTraded$Local + LocalorTraded$Traded)
+  LocalorTraded$TradedRatio <- LocalorTraded$Traded/(LocalorTraded$Local + LocalorTraded$Traded)  
+  LocalandTradedRatiosbyBEA <- LocalorTraded[, c(bea_code, "LocalRatio", "TradedRatio")]
   return(LocalandTradedRatiosbyBEA)
 }
-
