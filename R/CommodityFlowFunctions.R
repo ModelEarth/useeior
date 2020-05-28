@@ -1,11 +1,11 @@
 #' Calculate domestic/import/export commodity flow ratios by state
 #' @param state State name.
 #' @param year A numeric value between 2012 and 2017 specifying the year of interest.
-#' @param flow_ratio_type Type of commodity flow, can be "domestic", "export", or "import"
+#' @param flow_ratio_type Type of commodity flow, can be "domestic", "export", or "import".
 #' @param ioschema A numeric value of either 2012 or 2007 specifying the io schema year.
 #' @param iolevel BEA sector level of detail, can be "Detail", "Summary", or "Sector".
 #' @return A data frame contains commodity flow ratios by BEA.
-calculateCommodityFlowRatios <- function(state, year, flow_ratio_type, ioschema, iolevel) {
+calculateCommodityFlowRatios <- function (state, year, flow_ratio_type, ioschema, iolevel) {
   # Load pre-saved FAF4 commodity flow data
   FAF <- get(paste("FAF", year, sep = "_"))
   # Load state FIPS and determine fips code for the state of interest (SoI)
@@ -16,21 +16,21 @@ calculateCommodityFlowRatios <- function(state, year, flow_ratio_type, ioschema,
   if (flow_ratio_type=="domestic") {
     FAF <- FAF[FAF$trade_type==1, c("dms_origst", "dms_destst", "sctg2", paste0("value_", year))]
     colnames(FAF) <- c("ORIG","DEST","SCTG","VALUE")
-    FAF$ORIG <- ifelse(FAF$ORIG==fips, "SoI", "RoU") 
-    FAF$DEST <- ifelse(FAF$DEST==fips, "SoI", "RoU") 
+    FAF$ORIG <- ifelse(FAF$ORIG==fips, "SoI", "RoUS")
+    FAF$DEST <- ifelse(FAF$DEST==fips, "SoI", "RoUS") 
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ ORIG + DEST + SCTG, FAF, sum)
   } else if (flow_ratio_type=="export") {
     FAF <- FAF[FAF$trade_type==3, c("dms_origst", "sctg2", paste0("value_", year))]
     colnames(FAF) <- c("ORIG","SCTG","VALUE")
-    FAF$ORIG <- ifelse(FAF$ORIG==FIPScode, "SoI", "RoU")
+    FAF$ORIG <- ifelse(FAF$ORIG==fips, "SoI", "RoUS")
     FAF$DEST <- "RoW"
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ ORIG + SCTG, FAF, sum)
   } else if (flow_ratio_type=="import") {
     FAF <- FAF[FAF$trade_type==2, c("dms_destst", "sctg2", paste0("value_", year))]
     colnames(FAF) <- c("DEST","SCTG","VALUE")
-    FAF$DEST <- ifelse(FAF$DEST==FIPScode, "SoI", "RoU")
+    FAF$DEST <- ifelse(FAF$DEST==FIPScode, "SoI", "RoUS")
     FAF$ORIG <- "RoW"
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ DEST + SCTG, FAF, sum)
@@ -94,4 +94,60 @@ calculateCommodityFlowRatios <- function(state, year, flow_ratio_type, ioschema,
     # To be completed
   }
   return(FAF_2r)
+}
+
+#' Calculate Census import/export commodity flow ratios by state
+#' @param state State name.
+#' @param year A numeric value between 2012 and 2017 specifying the year of interest.
+#' @param flow_ratio_type Type of commodity flow, can be "export" or "import".
+#' @param ioschema A numeric value of either 2012 or 2007 specifying the io schema year.
+#' @param iolevel BEA sector level of detail, can be "Detail", "Summary", or "Sector".
+#' @return A data frame contains international commodity flow ratios by BEA.
+calculateCensusForeignCommodityFlowRatios <- function (state, year, flow_ratio_type, ioschema, iolevel) {
+  # Load pre-saved state export/import data
+  if (year<2013) {
+    trade <- get(paste0("Census_USATrade", Hmisc::capitalize(flow_ratio_type), "_", year))
+    state_trade <- trade[trade$State==state, c("NAICS", "Value")]
+    US_trade <- stats::aggregate(Value ~ NAICS, trade, sum)
+  } else {
+    trade <- get(paste0("Census_State", Hmisc::capitalize(flow_ratio_type), "_", year))
+    colnames(trade) <- c("NAICS", "CTY_NAME", "STATE", "Value", "YEAR")
+    state_trade <- trade[trade$STATE==state.abb[grep(state, state.name)],
+                         c("NAICS", "Value")]
+    US_trade <- trade[trade$STATE=="-", c("NAICS", "Value")]
+  }
+  # Combine state and US trade tables
+  state_US_trade <- merge(state_trade, US_trade, by = "NAICS")
+  colnames(state_US_trade) <- c("NAICS", "StateValue", "USValue")
+  # Map to BEA
+  bea_code <- paste("BEA", ioschema, iolevel, "Code", sep = "_")
+  state_US_trade <- merge(unique(useeior::MasterCrosswalk2012[, c("NAICS_2012_Code", bea_code)]),
+                          state_US_trade, by.x = "NAICS_2012_Code", by.y = "NAICS")
+  # Adjust the import data using the following logic:
+  # For each BEA code, find all possible corresponding 4-digit NAICS (dig = 4) and create a subset, then determine:
+  # If nrow of the subset is larger than 0, keep the subset to represent this BEA code's data;
+  # Otherwise, go to the corresponding 3-digit NAICS (dig = dig - 1) and repeat the previous steps.
+  trade_BEA_list <- list()
+  for (bea in unique(state_US_trade[, bea_code])) {
+    dig <- 4
+    ind <- FALSE
+    while(ind==FALSE & dig>1) {
+      tmp <- state_US_trade[state_US_trade[, bea_code]==bea & nchar(state_US_trade$NAICS)==dig, ]
+      if (nrow(tmp)>0) {
+        trade_BEA_list[[bea]] <- tmp
+        ind <- TRUE
+        trade_BEA_list[[bea]][, "NAICS_digit"] <- dig # mark the NAICS digit used for this USEEIO code
+      } else {
+        dig <- dig - 1
+      }
+    }
+  }
+  state_US_trade_BEA <- do.call(rbind, trade_BEA_list)
+  # Aggregate by BEA
+  state_US_trade_BEA <- stats::aggregate(state_US_trade_BEA[, c("StateValue", "USValue")],
+                                         by = list(state_US_trade_BEA[,bea_code]), sum)
+  colnames(state_US_trade_BEA)[1] <- bea_code
+  # Calculate trade ratio
+  state_US_trade_BEA$SoITradeRatio <- state_US_trade_BEA$StateValue/state_US_trade_BEA$USValue
+  return(state_US_trade_BEA)
 }
