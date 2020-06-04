@@ -825,7 +825,7 @@ getBEAStateData <- function (dataname) {
     StateData[, as.character(year_range)] <- StateData[, as.character(year_range)]*1E3
   }
   # Keep state-level data
-  StateData <- StateData[StateData$GeoName %in% c(state.name, "District of Columbia"),
+  StateData <- StateData[StateData$GeoName %in% c(state.name, "District of Columbia", "United States *"),
                          c("GeoName", "LineCode", "Description", as.character(year_range))]
   return(StateData)
 }

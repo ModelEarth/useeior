@@ -685,7 +685,7 @@
 "MasterCrosswalk2012"
 
 #' State GDP table (2007-2019)
-#' @format A data frame with 4641 obs. and 16 variables
+#' @format A data frame with 4736 obs. and 16 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -708,7 +708,7 @@
 "State_GDP_2007_2019"
 
 #' State Employee Compensation table (2007-2017)
-#' @format A data frame with 4641 obs. and 14 variables
+#' @format A data frame with 4736 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -729,7 +729,7 @@
 "State_Compensation_2007_2017"
 
 #' State Tax table (2007-2017)
-#' @format A data frame with 4641 obs. and 14 variables
+#' @format A data frame with 4732 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -750,7 +750,7 @@
 "State_Tax_2007_2017"
 
 #' State GOS table (2007-2017)
-#' @format A data frame with 4641 obs. and 14 variables
+#' @format A data frame with 4736 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}

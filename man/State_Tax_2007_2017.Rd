@@ -5,7 +5,7 @@
 \alias{State_Tax_2007_2017}
 \title{State Tax table (2007-2017)}
 \format{
-A data frame with 4641 obs. and 14 variables
+A data frame with 4732 obs. and 14 variables
 \describe{
  \item{GeoName}{text code}
  \item{LineCode}{integer}

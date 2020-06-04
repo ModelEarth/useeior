@@ -5,7 +5,7 @@
 \alias{State_GDP_2007_2019}
 \title{State GDP table (2007-2019)}
 \format{
-A data frame with 4641 obs. and 16 variables
+A data frame with 4736 obs. and 16 variables
 \describe{
  \item{GeoName}{text code}
  \item{LineCode}{integer}
