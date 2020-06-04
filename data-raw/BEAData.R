@@ -805,38 +805,38 @@ getBEAStateData <- function (dataname) {
   if (dataname=="GDP") {
     FileName <- "inst/extdata/SAGDP/SAGDP2N__ALL_AREAS_1997_2019.csv"
   } else if (dataname=="Tax") {
-    FileName <- "inst/extdata/SAGDP/SAGDP3N__ALL_AREAS_1997_2019.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP3N__ALL_AREAS_1997_2017.csv"
   } else if (dataname=="Compensation") {
-    FileName <- "inst/extdata/SAGDP/SAGDP4N__ALL_AREAS_1997_2019.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP4N__ALL_AREAS_1997_2017.csv"
   } else if (dataname=="GOS") {
-    FileName <- "inst/extdata/SAGDP/SAGDP7N__ALL_AREAS_1997_2019.csv"
+    FileName <- "inst/extdata/SAGDP/SAGDP7N__ALL_AREAS_1997_2017.csv"
   }
+  endyear <- substr(FileName, nchar(FileName) - 7, nchar(FileName)-4)
+  year_range <- c(2007:endyear)
   # Load state data
   StateData <- utils::read.table(FileName, sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, fill = TRUE)
   StateData <- StateData[!is.na(StateData$LineCode), ]
   # Convert values to numeric
-  StateData[, as.character(2007:2018)] <- sapply(StateData[, as.character(2007:2018)], as.numeric)
-  # Replace NA with zero
-  StateData[is.na(StateData)] <- 0
+  StateData[, as.character(year_range)] <- sapply(StateData[, as.character(year_range)], as.numeric)
   # Convert values to current US $
   if (unique(StateData$Unit)=="Millions of current dollars") {
-    StateData[, as.character(2007:2018)] <- StateData[, as.character(2007:2018)]*1E6
+    StateData[, as.character(year_range)] <- StateData[, as.character(year_range)]*1E6
   } else if (unique(StateData$Unit)=="Thousands of dollars") {
-    StateData[, as.character(2007:2018)] <- StateData[, as.character(2007:2018)]*1E3
+    StateData[, as.character(year_range)] <- StateData[, as.character(year_range)]*1E3
   }
   # Keep state-level data
   StateData <- StateData[StateData$GeoName %in% c(state.name, "District of Columbia"),
-                         c("GeoName", "LineCode", "Description", as.character(2007:2018))]
+                         c("GeoName", "LineCode", "Description", as.character(year_range))]
   return(StateData)
 }
-State_GDP_2007_2018 <- getBEAStateData("GDP")
-usethis::use_data(State_GDP_2007_2018, overwrite = TRUE)
-State_Tax_2007_2018 <- getBEAStateData("Tax")
-usethis::use_data(State_Tax_2007_2018, overwrite = TRUE)
-State_Compensation_2007_2018 <- getBEAStateData("Compensation")
-usethis::use_data(State_Compensation_2007_2018, overwrite = TRUE)
-State_GOS_2007_2018 <- getBEAStateData("GOS")
-usethis::use_data(State_GOS_2007_2018, overwrite = TRUE)
+State_GDP_2007_2019 <- getBEAStateData("GDP")
+usethis::use_data(State_GDP_2007_2019, overwrite = TRUE)
+State_Tax_2007_2017 <- getBEAStateData("Tax")
+usethis::use_data(State_Tax_2007_2017, overwrite = TRUE)
+State_Compensation_2007_2017 <- getBEAStateData("Compensation")
+usethis::use_data(State_Compensation_2007_2017, overwrite = TRUE)
+State_GOS_2007_2017 <- getBEAStateData("GOS")
+usethis::use_data(State_GOS_2007_2017, overwrite = TRUE)
 
 # Get state employment (full-time and part-time) 2009-2018
 getBEAStateEmployment <- function () {
