@@ -684,8 +684,8 @@
 #' }
 "MasterCrosswalk2012"
 
-#' State GDP table (2007-2018)
-#' @format A data frame with 4550 obs. and 15 variables
+#' State GDP table (2007-2019)
+#' @format A data frame with 4641 obs. and 16 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -702,12 +702,13 @@
 #'  \item{2016}{current year USD}
 #'  \item{2017}{current year USD}
 #'  \item{2018}{current year USD}
+#'  \item{2019}{current year USD}
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
-"State_GDP_2007_2018"
+"State_GDP_2007_2019"
 
-#' State Employee Compensation table (2007-2018)
-#' @format A data frame with 4550 obs. and 15 variables
+#' State Employee Compensation table (2007-2017)
+#' @format A data frame with 4641 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -723,13 +724,12 @@
 #'  \item{2015}{current year USD}
 #'  \item{2016}{current year USD}
 #'  \item{2017}{current year USD}
-#'  \item{2018}{current year USD}
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
-"State_Compensation_2007_2018"
+"State_Compensation_2007_2017"
 
-#' State Tax table (2007-2018)
-#' @format A data frame with 4550 obs. and 15 variables
+#' State Tax table (2007-2017)
+#' @format A data frame with 4641 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -745,13 +745,12 @@
 #'  \item{2015}{current year USD}
 #'  \item{2016}{current year USD}
 #'  \item{2017}{current year USD}
-#'  \item{2018}{current year USD}
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
-"State_Tax_2007_2018"
+"State_Tax_2007_2017"
 
-#' State GOS table (2007-2018)
-#' @format A data frame with 4550 obs. and 15 variables
+#' State GOS table (2007-2017)
+#' @format A data frame with 4641 obs. and 14 variables
 #' \describe{
 #'  \item{GeoName}{text code}
 #'  \item{LineCode}{integer}
@@ -767,10 +766,9 @@
 #'  \item{2015}{current year USD}
 #'  \item{2016}{current year USD}
 #'  \item{2017}{current year USD}
-#'  \item{2018}{current year USD}
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAGDP.zip}
-"State_GOS_2007_2018"
+"State_GOS_2007_2017"
 
 #' State Employment table (2009-2018)
 #' @format A data frame with 7080 obs. and 13 variables
@@ -813,3 +811,169 @@
 #' }
 #' @source \url{https://apps.bea.gov/regional/zip/SAEXP.zip}
 "State_PCE_2007_2018"
+
+#' State Export table (2012)
+#' @format A data frame with 6834 obs. and 4 variables
+#' \describe{
+#'  \item{State}{text code}
+#'  \item{Year}{integer}
+#'  \item{NAICS}{integer}
+#'  \item{Value}{numeric value}
+#' }
+#' @source \url{https://usatrade.census.gov}
+"Census_USATradeExport_2012"
+
+#' State Import table (2012)
+#' @format A data frame with 6834 obs. and 4 variables
+#' \describe{
+#'  \item{State}{text code}
+#'  \item{Year}{integer}
+#'  \item{NAICS}{integer}
+#'  \item{Value}{numeric value}
+#' }
+#' @source \url{https://usatrade.census.gov}
+"Census_USATradeImport_2012"
+
+#' State Export table (2013)
+#' @format A data frame with 8554 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2013"
+
+#' State Import table (2013)
+#' @format A data frame with 8557 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2013"
+
+#' State Export table (2014)
+#' @format A data frame with 8566 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2014"
+
+#' State Import table (2014)
+#' @format A data frame with 8590 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2014"
+
+#' State Export table (2015)
+#' @format A data frame with 7964 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2015"
+
+#' State Import table (2015)
+#' @format A data frame with 7998 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2015"
+
+#' State Export table (2016)
+#' @format A data frame with 7942 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2016"
+
+#' State Import table (2016)
+#' @format A data frame with 8009 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2016"
+
+#' State Export table (2017)
+#' @format A data frame with 7931 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2017"
+
+#' State Import table (2017)
+#' @format A data frame with 7989 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2017"
+
+#' State Export table (2018)
+#' @format A data frame with 7923 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{ALL_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/exports}
+"Census_StateExport_2018"
+
+#' State Import table (2018)
+#' @format A data frame with 7994 obs. and 5 variables
+#' \describe{
+#'  \item{NAICS}{text code}
+#'  \item{CTY_NAME}{text code}
+#'  \item{STTAE}{text code}
+#'  \item{GEN_VAL_YR}{numeric value}
+#'  \item{YEAR}{integer}
+#' }
+#' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
+"Census_StateImport_2018"

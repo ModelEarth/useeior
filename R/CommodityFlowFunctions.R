@@ -15,23 +15,23 @@ calculateCommodityFlowRatios <- function (state, year, flow_ratio_type, ioschema
   # Generate FAF_2r
   if (flow_ratio_type=="domestic") {
     FAF <- FAF[FAF$trade_type==1, c("dms_origst", "dms_destst", "sctg2", paste0("value_", year))]
-    colnames(FAF) <- c("ORIG","DEST","SCTG","VALUE")
+    colnames(FAF) <- c("ORIG", "DEST", "SCTG", "VALUE")
     FAF$ORIG <- ifelse(FAF$ORIG==fips, "SoI", "RoUS")
     FAF$DEST <- ifelse(FAF$DEST==fips, "SoI", "RoUS") 
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ ORIG + DEST + SCTG, FAF, sum)
   } else if (flow_ratio_type=="export") {
     FAF <- FAF[FAF$trade_type==3, c("dms_origst", "sctg2", paste0("value_", year))]
-    colnames(FAF) <- c("ORIG","SCTG","VALUE")
+    colnames(FAF) <- c("ORIG", "SCTG", "VALUE")
     FAF$ORIG <- ifelse(FAF$ORIG==fips, "SoI", "RoUS")
     FAF$DEST <- "RoW"
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ ORIG + SCTG, FAF, sum)
   } else if (flow_ratio_type=="import") {
     FAF <- FAF[FAF$trade_type==2, c("dms_destst", "sctg2", paste0("value_", year))]
-    colnames(FAF) <- c("DEST","SCTG","VALUE")
-    FAF$DEST <- ifelse(FAF$DEST==FIPScode, "SoI", "RoUS")
+    colnames(FAF) <- c("DEST", "SCTG", "VALUE")
     FAF$ORIG <- "RoW"
+    FAF$DEST <- ifelse(FAF$DEST==fips, "SoI", "RoUS")
     # Aggregate to 2 regions 
     FAF_2r <- stats::aggregate(VALUE ~ DEST + SCTG, FAF, sum)
   }
