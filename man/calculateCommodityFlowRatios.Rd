@@ -11,7 +11,7 @@ calculateCommodityFlowRatios(state, year, flow_ratio_type, ioschema, iolevel)
 
 \item{year}{A numeric value between 2012 and 2017 specifying the year of interest.}
 
-\item{flow_ratio_type}{Type of commodity flow, can be "domestic", "export", or "import"}
+\item{flow_ratio_type}{Type of commodity flow, can be "domestic", "export", or "import".}
 
 \item{ioschema}{A numeric value of either 2012 or 2007 specifying the io schema year.}
 
