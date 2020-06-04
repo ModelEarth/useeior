@@ -2,10 +2,20 @@
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains state GDP for all states at a specific year.
 getStateGDP <- function(year) {
-  # Load pre-saved state GDP 2007-2018 
-  StateGDP <- useeior::State_GDP_2007_2018
+  # Load pre-saved state GDP 2007-2019
+  StateGDP <- useeior::State_GDP_2007_2019
   StateGDP <- StateGDP[, c("GeoName", "LineCode", as.character(year))]
   return(StateGDP)
+}
+
+#' Get industry-level Employment Compensation for all states at a specific year.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state GDP for all states at a specific year.
+getStateEmpCompensation <- function(year) {
+  # Load pre-saved state Employment Compensation 2007-2017
+  StateEmpCompensation <- useeior::State_Compensation_2007_2017
+  StateEmpCompensation <- StateEmpCompensation[, c("GeoName", "LineCode", as.character(year))]
+  return(StateEmpCompensation)
 }
 
 #' Map state table to BEA Summary, mark sectors that need allocation
@@ -15,7 +25,9 @@ getStateGDP <- function(year) {
 mapStateTabletoBEASummary <- function(statetablename, year) {
   if (statetablename=="GDP") {
     StateTable <- getStateGDP(year)
-  } # Add else-if statement for other state table options
+  } else if (statetablename=="EmpCompensation") {
+    StateTable <- getStateEmpCompensation(year)
+  }
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
                                                sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
@@ -110,7 +122,7 @@ allocateStateTabletoBEASummary <- function(statetablename, year, allocationweigh
 calculateStateUSValueAddedRatio <- function(year) {
   # Generate state GDP (value added) table
   StateValueAdded <- allocateStateTabletoBEASummary("GDP", year, "Employment")
-  # Generate sum of state GDP (value added) table
+  # Generate sum of state GDP (value added)
   StateValueAdded_sum <- stats::aggregate(StateValueAdded[, as.character(year)],
                                           by = list(StateValueAdded$BEA_2012_Summary_Code),
                                           sum)

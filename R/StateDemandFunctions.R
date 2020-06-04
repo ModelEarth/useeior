@@ -75,3 +75,60 @@ estimateStateHouseholdDemand <- function(year) {
   }
   return(State_HouseholdDemand)
 }
+
+
+#' Estimate state government demand at BEA Summary level.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @param gov Type of government, can be "federal" or "state and local".
+#' @return A data frame contains state government demand for all states at a specific year at BEA Summary level.
+estimateStateGovDemand <- function(year, gov) {
+  
+}
+
+#' Estimate state-US employee compensation ratios at BEA Summary level.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state-US employment compensation ratios for all states at a specific year at BEA Summary level.
+calculateStateUSEmpCompensationRatio <- function(year) {
+  # Generate state Employee Compensation table
+  StateEmpCompensation <- allocateStateTabletoBEASummary("EmpCompensation", year, "Employment")
+  # Separate into state Employee Compensation
+  StateEmpCompensation <- StateEmpCompensation[StateEmpCompensation$GeoName!="United States *", ]
+  # Map US Employee Compensation to BEA
+  USEmpCompensation <- getStateEmpCompensation(year)
+  USEmpCompensation <- USEmpCompensation[USEmpCompensation$GeoName=="United States *", ]
+  BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
+                                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  allocation_sectors <- BEAStateGDPtoBEASummary[duplicated(BEAStateGDPtoBEASummary$LineCode) | duplicated(BEAStateGDPtoBEASummary$LineCode, fromLast = TRUE), ]
+  USEmpCompensation <- merge(USEmpCompensation, BEAStateGDPtoBEASummary, by = "LineCode")
+  USEmpCompensation <- merge(USEmpCompensation, useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE],
+                             by.x = "BEA_2012_Summary_Code", by.y = 0)
+  USEmpCompensation[, as.character(year)] <- USEmpCompensation[, paste0(year, ".x")]
+  for (linecode in unique(allocation_sectors$LineCode)) {
+    value_vector <- USEmpCompensation[USEmpCompensation$LineCode==linecode, paste0(year, ".x")]
+    weight_vector <- USEmpCompensation[USEmpCompensation$LineCode==linecode, paste0(year, ".y")]
+    USEmpCompensation[USEmpCompensation$LineCode==linecode, as.character(year)] <- value_vector*(weight_vector/sum(weight_vector))
+  }
+  USEmpCompensation <- USEmpCompensation[, c("BEA_2012_Summary_Code", as.character(year))]
+  # Generate sum of state Employee Compensation
+  StateEmpCompensation_sum <- stats::aggregate(StateEmpCompensation[, as.character(year)],
+                                               by = list(StateEmpCompensation$BEA_2012_Summary_Code),
+                                               sum, na.rm = TRUE)
+  colnames(StateEmpCompensation_sum) <- c("BEA_2012_Summary_Code", "StateEmpCompensation_sum")
+  # Merge sum of state Employee Compensation with US employee Compensation to get employee Compensation of Overseas region
+  OverseasEmpCompensation <- merge(StateEmpCompensation_sum, USEmpCompensation,
+                                   by = "BEA_2012_Summary_Code", all.x = TRUE)
+  OverseasEmpCompensation[is.na(OverseasEmpCompensation)] <- 0
+  OverseasEmpCompensation[, paste0(year, ".x")] <- OverseasEmpCompensation[, as.character(year)] - OverseasEmpCompensation$StateEmpCompensation_sum
+  OverseasEmpCompensation[, paste0(year, ".y")] <- OverseasEmpCompensation[, as.character(year)]
+  OverseasEmpCompensation$GeoName <- "Overseas"
+  # Merge state GDP and US Employee Compensation tables
+  StateUSEmpCompensation <- merge(StateEmpCompensation, USEmpCompensation, by = "BEA_2012_Summary_Code")
+  # Append Overseas EmpCompensation to StateUSEmpCompensation
+  StateUSEmpCompensation <- rbind(StateUSEmpCompensation, OverseasEmpCompensation[, colnames(StateUSEmpCompensation)])
+  # Calculate the state-US Employee Compensation ratios
+  StateUSEmpCompensation$Ratio <- StateUSEmpCompensation[, paste0(year, ".x")]/StateUSEmpCompensation[, paste0(year, ".y")]
+  StateUSEmpCompensation <- StateUSEmpCompensation[order(StateUSEmpCompensation$GeoName, StateUSEmpCompensation$BEA_2012_Summary_Code),
+                                         c("BEA_2012_Summary_Code", "GeoName", "Ratio")]
+  rownames(StateUSEmpCompensation) <- NULL
+  return(StateUSEmpCompensation)
+}
