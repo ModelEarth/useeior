@@ -190,3 +190,5 @@ save(State_Summary_MakeTransaction_balanced,
      file = paste0("data/State_Summary_Make_", year, ".rda"))
 save(State_Summary_IndustryOutput_list,
      file = paste0("data/State_Summary_IndustryOutput_", year, ".rda"))
+save(State_Summary_CommodityOutput_list,
+     file = paste0("data/State_Summary_CommodityOutput_", year, ".rda"))

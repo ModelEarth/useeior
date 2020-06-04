@@ -8,16 +8,16 @@ states <- names(State_Summary_IndustryOutput_list)
 
 #' 2 - Load US Summary Make table for given year
 #' Generate US Summary Industry Output
-US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"), as.environment("package:useeior"))*1E6
+US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"))*1E6
 US_Summary_MakeTransaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
                                               -which(colnames(US_Summary_Make)=="Total Industry Output")]
 US_Summary_IndustryOutput <- rowSums(US_Summary_MakeTransaction)
 
-#' 3 - Load US Summary Make table for given year
-#' Generate US Summary Industry Output
-US_Summary_Use <- get(paste("Summary_Use", year, "PRO_BeforeRedef", sep = "_"), as.environment("package:useeior"))
+#' 3 - Load US Summary Use table for given year
+#' Generate US Summary Use Transaction
+US_Summary_Use <- get(paste("Summary_Use", year, "PRO_BeforeRedef", sep = "_"))*1E6
 US_Summary_UseTransaction <- US_Summary_Use[colnames(US_Summary_MakeTransaction),
-                                            rownames(US_Summary_MakeTransaction)]*1E6
+                                            rownames(US_Summary_MakeTransaction)]
 
 #' 4 - Calculate state_US_IndustryOutput_ratio, for each state and each industry,
 #' Divide state IndustryOutput by US IndustryOutput.
