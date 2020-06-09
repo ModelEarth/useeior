@@ -977,3 +977,21 @@
 #' }
 #' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
 "Census_StateImport_2018"
+
+#' State and Local Government Expenditure table (2007-2017)
+#' @format A data frame with 52 obs. and 11 variables
+#' \describe{
+#'  \item{2007}{current year USD}
+#'  \item{2008}{current year USD}
+#'  \item{2009}{current year USD}
+#'  \item{2010}{current year USD}
+#'  \item{2011}{current year USD}
+#'  \item{2012}{current year USD}
+#'  \item{2013}{current year USD}
+#'  \item{2014}{current year USD}
+#'  \item{2015}{current year USD}
+#'  \item{2016}{current year USD}
+#'  \item{2017}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2007_2018"

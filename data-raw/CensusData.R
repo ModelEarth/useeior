@@ -90,3 +90,52 @@ Census_StateImport_2017 <- getCensusStateImportbyNAICS(2017)
 usethis::use_data(Census_StateImport_2017, overwrite = TRUE)
 Census_StateImport_2018 <- getCensusStateImportbyNAICS(2018)
 usethis::use_data(Census_StateImport_2018, overwrite = TRUE)
+
+# Get state and local gov expenditure 2007-2017
+getStateLocalGovExpenditure <- function () {
+  # Create base_url
+  base_url <- "https://www2.census.gov/programs-surveys/gov-finances/tables/"
+  df <- data.frame()
+  for (year in 2007:2017) {
+    df_year <- data.frame()
+    # Specify table to download
+    for (table in c("a", "b")) {
+      # Specify file format
+      if (year < 2012) {
+        FileType <- ".xls"
+      } else {
+        FileType <- ".xlsx"
+      }
+      # Create url
+      url <- paste0(base_url, year, "/summary-tables/", substr(year, 3, 4),
+                    "slsstab1", table, FileType)
+      TableName <- paste0(substr(year, 3, 4), "slsstab1", table, FileType)
+      FileName <- paste0("inst/extdata/StateLocalGovFinances/", TableName)
+      # Download file
+      if(!file.exists(FileName)) {
+        utils::download.file(url, FileName, mode = "wb")
+      }
+      # Specify rows to skip based on year
+      if (year%in%c(2008, 2013:2016)) {
+        skip_rows <- 9
+      } else if (year%in%c(2009:2011)) {
+        skip_rows <- 8
+      } else {
+        skip_rows <- 7
+      }
+      # Load table
+      df_i <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE, skip = skip_rows))
+      # Keep wanted rows and columns
+      df_i <- as.data.frame(t(df_i[df_i$Description=="Expenditure1"&complete.cases(df_i), ]))
+      df_year <- rbind(df_year, df_i)
+    }
+    colnames(df_year) <- as.character(year)
+    df_year <- df_year[c("United States Total", state.name, "District of Columbia"), , drop = FALSE]
+    # Convert values to numeric and $
+    df_year[, as.character(year)] <- as.numeric(as.character(df_year[, as.character(year)]))*1E3
+    df <- rbind(df, as.data.frame(t(df_year)))
+  }
+  df <- as.data.frame(t(df))
+}
+Census_StateLocalGovExpenditure_2007_2018 <- getStateLocalGovExpenditure()
+usethis::use_data(Census_StateLocalGovExpenditure_2007_2018, overwrite = TRUE)
