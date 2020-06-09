@@ -30,10 +30,10 @@ for (state in states) {
 
 #' 5 - Vertically stack all state Use trascation tables.
 State_Summary_UseTransaction <- do.call(rbind, State_Summary_UseTransaction_list)
-rownames(State_Summary_UseTransaction) <- paste(rep(names(State_Summary_UseTransaction),
-                                                    each = nrow(State_Summary_UseTransaction[[1]])),
-                                                rep(rownames(State_Summary_UseTransaction[[1]]),
-                                                    time = length(names(State_Summary_UseTransaction))),
+rownames(State_Summary_UseTransaction) <- paste(rep(names(State_Summary_UseTransaction_list),
+                                                    each = nrow(State_Summary_UseTransaction_list[[1]])),
+                                                rep(rownames(State_Summary_UseTransaction_list[[1]]),
+                                                    time = length(names(State_Summary_UseTransaction_list))),
                                                 sep = ".")
 colnames(State_Summary_UseTransaction) <- colnames(US_Summary_UseTransaction)
 
@@ -46,3 +46,16 @@ for (industry in colnames(US_Summary_UseTransaction)) {
   State_CommInputTotal_list[[industry]] <- sum(State_Summary_UseTransaction[, paste(states, industry, sep = ".")])
 }
 unlist(State_CommInputTotal_list) - colSums(US_Summary_UseTransaction)
+
+#' 7 - For each state, append Value Added to the end of Use table
+StateVA <- allocateStateTabletoBEASummary("GDP", year, allocationweightsource = "Employment")
+StateVA <- reshape2::dcast(StateVA, GeoName ~ BEA_2012_Summary_Code, value.var = as.character(year))
+StateVA[is.na(StateVA)] <- 0
+rownames(StateVA) <- StateVA$GeoName
+StateVA$GeoName <- NULL
+USValueAdded <- useeior::Summary_ValueAdded_IO[, as.character(year), drop = FALSE]
+StateVA["Overseas", ] <- USValueAdded[, as.character(year)] - colSums(StateVA[rownames(StateVA)!="United States *", ], na.rm = TRUE)
+StateVA <- StateVA[rownames(StateVA)!="United States *", ]
+rownames(StateVA) <- paste(rownames(StateVA), "ValueAdded", sep = ".")
+State_Summary_Use <- rbind(State_Summary_UseTransaction, StateVA)
+State_Summary_Use <- State_Summary_Use[order(rownames(State_Summary_Use)), ]
