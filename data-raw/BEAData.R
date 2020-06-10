@@ -901,3 +901,44 @@ getBEAStatePCE <- function () {
 }
 State_PCE_2007_2018 <- getBEAStatePCE()
 usethis::use_data(State_PCE_2007_2018, overwrite = TRUE)
+
+# Download US Gov Expenditure (NIPA table) from BEA
+getBEAGovExpenditure <- function() {
+  TableName <- "Section3All_xls.xlsx"
+  FileName <- paste0("inst/extdata/StateLocalGovFinances/", TableName)
+  url <- "https://apps.bea.gov/national/Release/XLS/Survey/Section3All_xls.xlsx"
+  # Download NIPA table file
+  if(!file.exists(FileName)) {
+    utils::download.file(url, FileName, mode = "wb")
+  }
+}
+
+# Get US Gov Investment table (Table 3.9.5 annual)
+getBEAGovInvestment <- function() {
+  # Download US Gov Expenditure (NIPA table) from BEA
+  getBEAGovExpenditure()
+  # Load Gov Investment table
+  GovInvestment <- as.data.frame(readxl::read_excel(FileName, sheet = "T30905-A",
+                                                    col_names = TRUE, skip = 7))
+  colnames(GovInvestment)[2] <- "Description"
+  GovInvestment <- GovInvestment[complete.cases(GovInvestment),
+                                 c("Line", "Description", as.character(c(2007:2019)))]
+  return(GovInvestment)
+}
+GovInvestment_2007_2019 <- getBEAGovInvestment()
+usethis::use_data(GovInvestment_2007_2019, overwrite = TRUE)
+
+# Get US Gov Consumption table (Table 3.10.5 annual)
+getBEAGovConsumption <- function() {
+  # Download US Gov Expenditure (NIPA table) from BEA
+  getBEAGovExpenditure()
+  # Load Gov Consumption table
+  GovConsumption <- as.data.frame(readxl::read_excel(FileName, sheet = "T31005-A",
+                                                     col_names = TRUE, skip = 7))
+  colnames(GovConsumption)[2] <- "Description"
+  GovConsumption <- GovConsumption[complete.cases(GovConsumption),
+                                   c("Line", "Description", as.character(c(2007:2019)))]
+  return(GovConsumption)
+}
+GovConsumption_2007_2019 <- getBEAGovConsumption()
+usethis::use_data(GovConsumption_2007_2019, overwrite = TRUE)
