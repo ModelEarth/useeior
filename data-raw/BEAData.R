@@ -920,13 +920,9 @@ getBEAGovInvestment <- function() {
   # Load Gov Investment table
   GovInvestment <- as.data.frame(readxl::read_excel(FileName, sheet = "T30905-A",
                                                     col_names = TRUE, skip = 7))
-  # Assign column name to the description column
   colnames(GovInvestment)[2] <- "Description"
-  # Keep wanted columns
   GovInvestment <- GovInvestment[complete.cases(GovInvestment),
                                  c("Line", "Description", as.character(c(2007:2019)))]
-  # Convert values from million $ to $
-  GovInvestment[, as.character(c(2007:2019))] <- GovInvestment[, as.character(c(2007:2019))]*1E6
   return(GovInvestment)
 }
 GovInvestment_2007_2019 <- getBEAGovInvestment()
@@ -939,13 +935,9 @@ getBEAGovConsumption <- function() {
   # Load Gov Consumption table
   GovConsumption <- as.data.frame(readxl::read_excel(FileName, sheet = "T31005-A",
                                                      col_names = TRUE, skip = 7))
-  # Assign column name to the description column
   colnames(GovConsumption)[2] <- "Description"
-  # Keep wanted columns
   GovConsumption <- GovConsumption[complete.cases(GovConsumption),
                                    c("Line", "Description", as.character(c(2007:2019)))]
-  # Convert values from million $ to $
-  GovConsumption[, as.character(c(2007:2019))] <- GovConsumption[, as.character(c(2007:2019))]*1E6
   return(GovConsumption)
 }
 GovConsumption_2007_2019 <- getBEAGovConsumption()
