@@ -132,3 +132,29 @@ calculateStateUSEmpCompensationRatio <- function(year) {
   rownames(StateUSEmpCompensation) <- NULL
   return(StateUSEmpCompensation)
 }
+
+#' Estimate weighting factor of each expenditure component over US total gov expenditure.
+#' @param year A numeric value between 2007 and 2019 specifying the year of interest.
+#' @param defense A boolean value indicating if the expenditure is spent on defense or not.
+#' @return A data frame contains weighting factor of each expenditure component over US total gov expenditure.
+calculateUSGovExpenditureWeightFactor <- function(year, defense) {
+  # Load data
+  GovInvestment <- useeior::GovInvestment_2007_2019
+  GovConsumption <- useeior::GovConsumption_2007_2019
+  # Keep rows by line code
+  if (defense) {
+    GovConsumption <- GovConsumption[GovConsumption$Line%in%c(26:28), ]
+    GovInvestment <- GovInvestment[GovInvestment$Line%in%c(20:21, 23:24), ]
+  } else {
+    GovConsumption <- GovConsumption[GovConsumption$Line%in%c(37:39), ]
+    GovInvestment <- GovInvestment[GovInvestment$Line%in%c(28:29, 31:32), ]
+  }
+  # Calculate weight factors and stack dfs together
+  WeightFactor <- rbind(cbind(GovConsumption[, c("Line", "Description")],
+                              GovConsumption[, as.character(year), drop = FALSE]/colSums(GovConsumption[, as.character(year), drop = FALSE])),
+                        cbind(GovInvestment[, c("Line", "Description")],
+                              GovInvestment[, as.character(year), drop = FALSE]/colSums(GovInvestment[, as.character(year), drop = FALSE])))
+  # Modify Description
+  WeightFactor$Description <- gsub("\\\\.*", "", WeightFactor$Description)
+  return(WeightFactor)
+}
