@@ -47,15 +47,7 @@ for (industry in colnames(US_Summary_UseTransaction)) {
 }
 unlist(State_CommInputTotal_list) - colSums(US_Summary_UseTransaction)
 
-#' 7 - For each state, append Value Added to the end of Use table
-StateVA <- allocateStateTabletoBEASummary("GDP", year, allocationweightsource = "Employment")
-StateVA <- reshape2::dcast(StateVA, GeoName ~ BEA_2012_Summary_Code, value.var = as.character(year))
-StateVA[is.na(StateVA)] <- 0
-rownames(StateVA) <- StateVA$GeoName
-StateVA$GeoName <- NULL
-USValueAdded <- useeior::Summary_ValueAdded_IO[, as.character(year), drop = FALSE]
-StateVA["Overseas", ] <- USValueAdded[, as.character(year)] - colSums(StateVA[rownames(StateVA)!="United States *", ], na.rm = TRUE)
-StateVA <- StateVA[rownames(StateVA)!="United States *", ]
-rownames(StateVA) <- paste(rownames(StateVA), "ValueAdded", sep = ".")
-State_Summary_Use <- rbind(State_Summary_UseTransaction, StateVA)
+#' 7 - For each state, append detailed Value Added to the end of Use table
+State_Value_Added <- assembleStateValueAdded(year)
+State_Summary_Use <- rbind(State_Summary_UseTransaction, State_Value_Added)
 State_Summary_Use <- State_Summary_Use[order(rownames(State_Summary_Use)), ]

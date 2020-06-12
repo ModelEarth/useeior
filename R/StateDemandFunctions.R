@@ -13,6 +13,66 @@ ImportCodes <- getVectorOfCodes("Import")
 ExportCodes <- getVectorOfCodes("Export")
 GovernmentDemandCodes <- getVectorOfCodes("GovernmentDemand")
 
+#' Get industry-level Compensation for all states at a specific year.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state Compensation for all states at a specific year.
+getStateEmpCompensation <- function(year) {
+  # Load pre-saved state Compensation 2007-2017
+  StateEmpCompensation <- useeior::State_Compensation_2007_2017
+  StateEmpCompensation <- StateEmpCompensation[, c("GeoName", "LineCode", as.character(year))]
+  return(StateEmpCompensation)
+}
+
+#' Get industry-level Tax for all states at a specific year.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state Tax for all states at a specific year.
+getStateTax <- function(year) {
+  # Load pre-saved state Tax 2007-2017
+  StateTax <- useeior::State_Tax_2007_2017
+  StateTax <- StateTax[, c("GeoName", "LineCode", as.character(year))]
+  return(StateTax)
+}
+
+#' Get industry-level Gross Operating Surplus (GOS) for all states at a specific year.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state GOS for all states at a specific year.
+getStateGOS <- function(year) {
+  # Load pre-saved state Tax 2007-2017
+  StateGOS <- useeior::State_GOS_2007_2017
+  StateGOS <- StateGOS[, c("GeoName", "LineCode", as.character(year))]
+  return(StateGOS)
+}
+
+#' Assemble Summary-level value added sectors (V001, V002, V003) for all states at a specific year.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains Summary-level value added (V001, V002, V003) for all states at a specific year.
+assembleStateValueAdded <- function(year) {
+  StateValueAdded <- data.frame()
+  for (sector in c("EmpCompensation", "Tax", "GOS")) {
+    # Generate Value Added tables by BEA
+    df <- allocateStateTabletoBEASummary(sector, year, allocationweightsource = "Employment")
+    # Convert table from long to wide
+    df <- reshape2::dcast(df, GeoName ~ BEA_2012_Summary_Code, value.var = as.character(year))
+    # Assign row names
+    rownames(df) <- df$GeoName
+    # Drop GeoName column
+    df$GeoName <- NULL
+    # Replace NA with 0
+    df[is.na(df)] <- 0
+    # Calculate Value Added for Overseas
+    df["Overseas", ] <- df[rownames(df)=="United States *", ] - colSums(df[rownames(df)!="United States *", ])
+    # Drop US values
+    df <- df[rownames(df)!="United States *", ]
+    # Modify row names
+    sector_code <- ifelse(sector=="EmpCompensation", "V001",
+                          ifelse(sector=="Tax", "V002",
+                                 ifelse(sector=="GOS", "V003")))
+    rownames(df) <- paste(rownames(df), sector_code, sep = ".")
+    StateValueAdded <- rbind(StateValueAdded, df)
+  }
+  return (StateValueAdded)
+}
+
 #' Calculate state-US PCE (personal consumption expenditures) ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains ratios of state/US PCE for all states at a specific year at BEA Summary level.

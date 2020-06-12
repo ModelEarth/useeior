@@ -8,16 +8,6 @@ getStateGDP <- function(year) {
   return(StateGDP)
 }
 
-#' Get industry-level Employment Compensation for all states at a specific year.
-#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @return A data frame contains state GDP for all states at a specific year.
-getStateEmpCompensation <- function(year) {
-  # Load pre-saved state Employment Compensation 2007-2017
-  StateEmpCompensation <- useeior::State_Compensation_2007_2017
-  StateEmpCompensation <- StateEmpCompensation[, c("GeoName", "LineCode", as.character(year))]
-  return(StateEmpCompensation)
-}
-
 #' Map state table to BEA Summary, mark sectors that need allocation
 #' @param statetablename Name of pre-saved state table, canbe GDP, Tax, Employment Compensation, and GOS.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
@@ -27,6 +17,10 @@ mapStateTabletoBEASummary <- function(statetablename, year) {
     StateTable <- getStateGDP(year)
   } else if (statetablename=="EmpCompensation") {
     StateTable <- getStateEmpCompensation(year)
+  } else if (statetablename=="Tax") {
+    StateTable <- getStateTax(year)
+  } else if (statetablename=="GOS") {
+    StateTable <- getStateGOS(year)
   }
   # Load State GDP to BEA Summary sector-mapping table
   BEAStateGDPtoBEASummary <- utils::read.table(system.file("extdata", "Crosswalk_StateGDPtoBEASummaryIO2012Schema.csv", package = "useeior"),
@@ -65,7 +59,7 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
       allocation_factors[allocation_factors$LineCode==linecode, "factor"] <- weight_vector/sum(weight_vector)
     }
     # Load BEA state Emp
-    BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoFips", "GeoName", "LineCode", as.character(year))]
+    BEAStateEmployment <- useeior::State_Employment_2009_2018[, c("GeoName", "LineCode", as.character(year))]
     # Map BEA state Emp (from LineCode) to BEA Summary
     BEAStateEmployment <- merge(BEAStateEmployment[BEAStateEmployment$GeoName %in% c(state.name, "District of Columbia"), ],
                                 allocation_factors[, c("BEA_2012_Summary_Code", "LineCode", "factor")],
@@ -73,15 +67,17 @@ calculateStatetoBEASummaryAllocationFactor <- function(year, allocationweightsou
     # Adjust BEA state Emp value based on allocation factor
     BEAStateEmployment[, as.character(year)] <- BEAStateEmployment[, as.character(year)]*BEAStateEmployment$factor
     allocation_weight <- stats::aggregate(BEAStateEmployment[, as.character(year)],
-                                          by = list(BEAStateEmployment$GeoFips,
-                                                    BEAStateEmployment$GeoName,
+                                          by = list(BEAStateEmployment$GeoName,
                                                     BEAStateEmployment$BEA_2012_Summary_Code),
                                           sum)
-    colnames(allocation_weight) <- c("GeoFips", "GeoName", "BEA_2012_Summary_Code", "Weight")
-    allocation_weight$GeoFips <- as.numeric(allocation_weight$GeoFips)
+    colnames(allocation_weight) <- c("GeoName", "BEA_2012_Summary_Code", "Weight")
   }
+  # Add US allocation weight (Summary Gross Output)
+  US_GrossOutput <- cbind.data.frame("United States *", rownames(useeior::Summary_GrossOutput_IO),
+                                     useeior::Summary_GrossOutput_IO[, as.character(year), drop = FALSE])
+  colnames(US_GrossOutput) <- colnames(allocation_weight)
   # Calculate allocation factor
-  allocation_df <- merge(allocation_weight, allocation_sectors, by = "BEA_2012_Summary_Code")
+  allocation_df <- merge(rbind(allocation_weight, US_GrossOutput), allocation_sectors, by = "BEA_2012_Summary_Code")
   for (state in unique(allocation_df$GeoName)) {
     for (linecode in unique(allocation_df$LineCode)) {
       weight_vector <- allocation_df[allocation_df$GeoName==state&allocation_df$LineCode==linecode, "Weight"]
