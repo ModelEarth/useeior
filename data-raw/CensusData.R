@@ -92,50 +92,67 @@ Census_StateImport_2018 <- getCensusStateImportbyNAICS(2018)
 usethis::use_data(Census_StateImport_2018, overwrite = TRUE)
 
 # Get state and local gov expenditure 2007-2017
-getStateLocalGovExpenditure <- function () {
+getStateLocalGovExpenditure <- function (year) {
   # Create base_url
   base_url <- "https://www2.census.gov/programs-surveys/gov-finances/tables/"
-  df <- data.frame()
-  for (year in 2007:2017) {
-    df_year <- data.frame()
-    # Specify table to download
-    for (table in c("a", "b")) {
-      # Specify file format
-      if (year < 2012) {
-        FileType <- ".xls"
-      } else {
-        FileType <- ".xlsx"
-      }
-      # Create url
-      url <- paste0(base_url, year, "/summary-tables/", substr(year, 3, 4),
-                    "slsstab1", table, FileType)
-      TableName <- paste0(substr(year, 3, 4), "slsstab1", table, FileType)
-      FileName <- paste0("inst/extdata/StateLocalGovFinances/", TableName)
-      # Download file
-      if(!file.exists(FileName)) {
-        utils::download.file(url, FileName, mode = "wb")
-      }
-      # Specify rows to skip based on year
-      if (year%in%c(2008, 2013:2016)) {
-        skip_rows <- 9
-      } else if (year%in%c(2009:2011)) {
-        skip_rows <- 8
-      } else {
-        skip_rows <- 7
-      }
-      # Load table
-      df_i <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE, skip = skip_rows))
-      # Keep wanted rows and columns
-      df_i <- as.data.frame(t(df_i[df_i$Description=="Expenditure1"&complete.cases(df_i), ]))
-      df_year <- rbind(df_year, df_i)
+  df_list <- list()
+  # Specify table to download
+  for (table in c("a", "b")) {
+    # Specify file format
+    if (year < 2012) {
+      FileType <- ".xls"
+    } else {
+      FileType <- ".xlsx"
     }
-    colnames(df_year) <- as.character(year)
-    df_year <- df_year[c("United States Total", state.name, "District of Columbia"), , drop = FALSE]
-    # Convert values to numeric and $
-    df_year[, as.character(year)] <- as.numeric(as.character(df_year[, as.character(year)]))*1E3
-    df <- rbind(df, as.data.frame(t(df_year)))
+    # Create url
+    url <- paste0(base_url, year, "/summary-tables/", substr(year, 3, 4),
+                  "slsstab1", table, FileType)
+    TableName <- paste0(substr(year, 3, 4), "slsstab1", table, FileType)
+    FileName <- paste0("inst/extdata/StateLocalGovFinances/", TableName)
+    # Download file
+    if(!file.exists(FileName)) {
+      utils::download.file(url, FileName, mode = "wb")
+    }
+    # Specify rows to skip based on year
+    if (year%in%c(2008, 2013:2016)) {
+      skip_rows <- 9
+    } else if (year%in%c(2009:2011)) {
+      skip_rows <- 8
+    } else {
+      skip_rows <- 7
+    }
+    # Load table
+    df_i <- as.data.frame(readxl::read_excel(FileName, sheet = 1, col_names = TRUE, skip = skip_rows))
+    # Keep Expenditures only
+    df_i <- df_i[which(df_i$Description == "Expenditure1"):nrow(df_i), ]
+    df_i <- df_i[, colnames(df_i)%in%c("Description", "United States Total", state.name, "District of Columbia")]
+    df_list[[table]] <- df_i[complete.cases(df_i), ]
   }
-  df <- as.data.frame(t(df))
+  df_list[["b"]][, "Description"] <- NULL
+  df <- cbind(df_list[["a"]], df_list[["b"]])
+  # Convert values to numeric and $
+  df[, 2:ncol(df)] <- sapply(df[, 2:ncol(df)], as.numeric)*1E3
+  return(df)
 }
-Census_StateLocalGovExpenditure_2007_2018 <- getStateLocalGovExpenditure()
-usethis::use_data(Census_StateLocalGovExpenditure_2007_2018, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2007 <- getStateLocalGovExpenditure(2007)
+usethis::use_data(Census_StateLocalGovExpenditure_2007, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2008 <- getStateLocalGovExpenditure(2008)
+usethis::use_data(Census_StateLocalGovExpenditure_2008, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2009 <- getStateLocalGovExpenditure(2009)
+usethis::use_data(Census_StateLocalGovExpenditure_2009, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2010 <- getStateLocalGovExpenditure(2010)
+usethis::use_data(Census_StateLocalGovExpenditure_2010, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2011 <- getStateLocalGovExpenditure(2011)
+usethis::use_data(Census_StateLocalGovExpenditure_2011, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2012 <- getStateLocalGovExpenditure(2012)
+usethis::use_data(Census_StateLocalGovExpenditure_2012, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2013 <- getStateLocalGovExpenditure(2013)
+usethis::use_data(Census_StateLocalGovExpenditure_2013, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2014 <- getStateLocalGovExpenditure(2014)
+usethis::use_data(Census_StateLocalGovExpenditure_2014, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2015 <- getStateLocalGovExpenditure(2015)
+usethis::use_data(Census_StateLocalGovExpenditure_2015, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2016 <- getStateLocalGovExpenditure(2016)
+usethis::use_data(Census_StateLocalGovExpenditure_2016, overwrite = TRUE)
+Census_StateLocalGovExpenditure_2017 <- getStateLocalGovExpenditure(2017)
+usethis::use_data(Census_StateLocalGovExpenditure_2017, overwrite = TRUE)

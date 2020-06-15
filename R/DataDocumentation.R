@@ -839,7 +839,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -851,7 +851,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -863,7 +863,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -875,7 +875,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -887,7 +887,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -899,7 +899,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -911,7 +911,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -923,7 +923,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -935,7 +935,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -947,7 +947,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -959,7 +959,7 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{ALL_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
@@ -971,30 +971,144 @@
 #' \describe{
 #'  \item{NAICS}{text code}
 #'  \item{CTY_NAME}{text code}
-#'  \item{STTAE}{text code}
+#'  \item{STATE}{text code}
 #'  \item{GEN_VAL_YR}{numeric value}
 #'  \item{YEAR}{integer}
 #' }
 #' @source \url{https://api.census.gov/data/timeseries/intltrade/imports}
 "Census_StateImport_2018"
 
-#' State and Local Government Expenditure table (2007-2017)
-#' @format A data frame with 52 obs. and 11 variables
+#' State and Local Government Expenditure table (2007)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
 #' \describe{
-#'  \item{2007}{current year USD}
-#'  \item{2008}{current year USD}
-#'  \item{2009}{current year USD}
-#'  \item{2010}{current year USD}
-#'  \item{2011}{current year USD}
-#'  \item{2012}{current year USD}
-#'  \item{2013}{current year USD}
-#'  \item{2014}{current year USD}
-#'  \item{2015}{current year USD}
-#'  \item{2016}{current year USD}
-#'  \item{2017}{current year USD}
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
 #' }
 #' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
-"Census_StateLocalGovExpenditure_2007_2018"
+"Census_StateLocalGovExpenditure_2007"
+
+#' State and Local Government Expenditure table (2008)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2008"
+
+#' State and Local Government Expenditure table (2009)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2009"
+
+#' State and Local Government Expenditure table (2010)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2010"
+
+#' State and Local Government Expenditure table (2011)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2011"
+
+#' State and Local Government Expenditure table (2012)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2012"
+
+#' State and Local Government Expenditure table (2013)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2013"
+
+#' State and Local Government Expenditure table (2014)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2014"
+
+#' State and Local Government Expenditure table (2015)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2015"
+
+#' State and Local Government Expenditure table (2016)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2016"
+
+#' State and Local Government Expenditure table (2017)
+#' @format A data frame with 86 obs. and 53 variables (including 50 states and D.C.)
+#' \describe{
+#'  \item{Description}{text code}
+#'  \item{United States Total}{current year USD}
+#'  \item{Alabama}{current year USD}
+#'  ...
+#'  \item{Wyoming}{current year USD}
+#' }
+#' @source \url{https://www.census.gov/programs-surveys/gov-finances/data/datasets.All.html}
+"Census_StateLocalGovExpenditure_2017"
 
 #' US Gov Consumption table (2007-2019)
 #' @format A data frame with 60 obs. and 15 variables
