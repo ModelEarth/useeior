@@ -120,7 +120,7 @@ calculateStateUSPCERatio <- function(year) {
   return(StateUSPCE)
 }
 
-#' Estimate state household demand at BEA Summary level.
+#' Calculate state household demand at BEA Summary level.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains state household demand for all states at a specific year at BEA Summary level.
 estimateStateHouseholdDemand <- function(year) {
@@ -136,16 +136,7 @@ estimateStateHouseholdDemand <- function(year) {
   return(State_HouseholdDemand)
 }
 
-
-#' Estimate state government demand at BEA Summary level.
-#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
-#' @param gov Type of government, can be "federal" or "state and local".
-#' @return A data frame contains state government demand for all states at a specific year at BEA Summary level.
-estimateStateGovDemand <- function(year, gov) {
-  
-}
-
-#' Estimate state-US employee compensation ratios at BEA Summary level.
+#' Calculate state-US employee compensation ratios at BEA Summary level.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains state-US employment compensation ratios for all states at a specific year at BEA Summary level.
 calculateStateUSEmpCompensationRatio <- function(year) {
@@ -193,7 +184,7 @@ calculateStateUSEmpCompensationRatio <- function(year) {
   return(StateUSEmpCompensation)
 }
 
-#' Estimate weighting factor of each expenditure component over US total gov expenditure.
+#' Calculate weighting factor of each expenditure component over US total gov expenditure.
 #' @param year A numeric value between 2007 and 2019 specifying the year of interest.
 #' @param defense A boolean value indicating if the expenditure is spent on defense or not.
 #' @return A data frame contains weighting factor of each expenditure component over US total gov expenditure.
@@ -218,3 +209,31 @@ calculateUSGovExpenditureWeightFactor <- function(year, defense) {
   WeightFactor$Description <- gsub("\\\\.*", "", WeightFactor$Description)
   return(WeightFactor)
 }
+
+#' Calculate state and local government expenditure ratio at BEA Summary level.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state and local government expenditure ratio for all states at a specific year at BEA Summary level.
+calculateStateLocalGovExpenditureRatio <- function(year) {
+  # Load state and local government expenditure
+  GovExp <- get(paste0("Census_StateLocalGovExpenditure_", year), as.environment("package:useeior"))
+  # Map to BEA Summary sectors
+  mapping <- utils::read.table(system.file("extdata", "Crosswalk_StateLocalGovExptoBEASummaryIO2012Schema.csv", package = "useeior"),
+                               sep = ",", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+  GovExpBEA <- merge(mapping, GovExp, by = "Description")
+  # Aggregate by BEA
+  GovExpBEA <- stats::aggregate(GovExpBEA[, c("United States Total", state.name, "District of Columbia")],
+                                by = list(GovExpBEA$BEA_2012_Summary_Code), sum)
+  colnames(GovExpBEA)[1] <- "BEA_2012_Summary_Code"
+  TotalGovExp <- GovExp[GovExp$Description=="Expenditure1", ]
+  colnames(TotalGovExp) <- colnames(GovExpBEA)
+  TotalGovExp$BEA_2012_Summary_Code <- "TotalExpenditure"
+  GovExpBEA <- rbind(GovExpBEA, TotalGovExp)
+  # Calculate ratios
+  GovExpBEA[, c(state.name, "District of Columbia")] <- GovExpBEA[, c(state.name, "District of Columbia")]/GovExpBEA[, "United States Total"]
+  # Convert table from wide to long
+  GovExpBEA[, "United States Total"] <- NULL
+  GovExpBEA <- reshape2::melt(GovExpBEA, id.vars = "BEA_2012_Summary_Code")
+  colnames(GovExpBEA) <- c("BEA_2012_Summary_Code", "State", "Ratio")
+  return(GovExpBEA)
+}
+
