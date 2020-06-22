@@ -9,6 +9,7 @@ Commodities <- getVectorOfCodes("Commodity")
 Industries <- getVectorOfCodes("Industry")
 HouseholdDemandCodes <- getVectorOfCodes("HouseholdDemand")
 InvestmentDemandCodes <- getVectorOfCodes("InvestmentDemand")
+ChangeInventories <- getVectorOfCodes("ChangeInventories")
 ImportCodes <- getVectorOfCodes("Import")
 ExportCodes <- getVectorOfCodes("Export")
 GovernmentDemandCodes <- getVectorOfCodes("GovernmentDemand")
@@ -41,6 +42,31 @@ getStateGOS <- function(year) {
   StateGOS <- useeior::State_GOS_2007_2017
   StateGOS <- StateGOS[, c("GeoName", "LineCode", as.character(year))]
   return(StateGOS)
+}
+
+#' Calculate state-US Commodity Output ratios at BEA Summary level.
+#' @param year A numeric value between 2007 and 2017 specifying the year of interest.
+#' @return A data frame contains state-US Commodity Output ratios at BEA Summary level.
+calculateStateCommodityOutputRatio <- function(year) {
+  # Load state Commodity output
+  load(paste0("data/State_Summary_CommodityOutput_", year, ".rda"))
+  states <- names(State_Summary_CommodityOutput_list)
+  # Load US Commodity output
+  US_Summary_Make <- get(paste("Summary_Make", year, "BeforeRedef", sep = "_"))*1E6
+  US_Summary_MakeTransaction <- US_Summary_Make[-which(rownames(US_Summary_Make)=="Total Commodity Output"),
+                                                -which(colnames(US_Summary_Make)=="Total Industry Output")]
+  US_Summary_CommodityOutput <- colSums(US_Summary_MakeTransaction)
+  # Calculate state Commodity output ratio
+  State_CommodityOutputRatio <- data.frame()
+  for (state in states) {
+    CommodityOutputRatio <- cbind.data.frame(names(US_Summary_CommodityOutput), state,
+                                             State_Summary_CommodityOutput_list[[state]]/US_Summary_CommodityOutput)
+    colnames(CommodityOutputRatio) <- c("BEA_2012_Summary_Code", "State", "Ratio")
+    CommodityOutputRatio[, c("BEA_2012_Summary_Code", "State")] <- sapply(CommodityOutputRatio[, c("BEA_2012_Summary_Code", "State")], as.character)
+    rownames(CommodityOutputRatio) <- NULL
+    State_CommodityOutputRatio <- rbind(State_CommodityOutputRatio, CommodityOutputRatio)
+  }
+  return(State_CommodityOutputRatio)
 }
 
 #' Assemble Summary-level value added sectors (V001, V002, V003) for all states at a specific year.
@@ -120,7 +146,7 @@ calculateStateUSPCERatio <- function(year) {
   return(StateUSPCE)
 }
 
-#' Calculate state household demand at BEA Summary level.
+#' Estimate state household demand at BEA Summary level.
 #' @param year A numeric value between 2007 and 2017 specifying the year of interest.
 #' @return A data frame contains state household demand for all states at a specific year at BEA Summary level.
 estimateStateHouseholdDemand <- function(year) {
@@ -236,4 +262,3 @@ calculateStateLocalGovExpenditureRatio <- function(year) {
   colnames(GovExpBEA) <- c("BEA_2012_Summary_Code", "State", "Ratio")
   return(GovExpBEA)
 }
-
