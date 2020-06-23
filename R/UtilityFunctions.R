@@ -170,3 +170,4 @@ writeMatrixasBinFile <- function(matrix, path) {
   }
   close(out)
 }
+
