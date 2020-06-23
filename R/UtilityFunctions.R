@@ -155,3 +155,18 @@ compareMatrices <- function(m1, m2, percentage_diff = FALSE) {
   m[is.na(m)] <- 0
   return(m)
 }
+
+#' Write matrix as bin file
+writeMatrixasBinFile <- function(matrix, path) {
+  out <- file(path, "wb")
+  rows <- dim(matrix)[1]
+  cols <- dim(matrix)[2]
+  writeBin(as.integer(rows), out, size = 4, endian = "little")
+  writeBin(as.integer(cols), out, size = 4, endian = "little")
+  for (col in 1:cols) {
+    for (row in 1:rows) {
+      writeBin(as.double(matrix[row, col]), out, size = 8, endian = "little")
+    }
+  }
+  close(out)
+}
