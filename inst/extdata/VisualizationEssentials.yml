@@ -1,0 +1,148 @@
+BEASectorLevel:
+  ColorLabelMapping:
+  - "#33A02C": # dark green
+    - "Agriculture, forestry, fishing, and hunting"
+    - "11"
+  - "#000000": # black
+    - "Mining"
+    - "21"
+  - "#696969": # dark grey
+    - "Utilities"
+    - "22"
+  - "#C0C0C0": # light grey
+    - "Construction"
+    - "23"
+  - "#E31A1C": # dark red
+    - "Manufacturing"
+    - "31G"
+  - "#1F78B4": # dark blue
+    - "Wholesale trade"
+    - "42"
+  - "#A6CEE3": # light blue
+    - "Retail trade"
+    - "44RT"
+  - "#FF6F00": # dark orange
+    - "Transportation and warehousing"
+    - "48TW"
+  - "#FDBF6F": # light orange
+    - "Information"
+    - "51"
+  - "#6A3D9A": # dark purple
+    - "Finance, insurance, real estate, rental, and leasing"
+    - "FIRE"
+  - "#CAB2D6": # light purple
+    - "Professional and business services"
+    - "PROF"
+  - "#800000": # maroon
+    - "Educational services, health care, and social assistance"
+    - "6"
+  - "#D2691E": # chocolate
+    - "Arts, entertainment, recreation, accommodation, and food services"
+    - "7"
+  - "#FF007F": # dark pink
+    - "Other services, except government"
+    - "81"
+  - "#B2DF8A": # light green
+    - "Government"
+    - "G"
+
+Indicators:
+  ColorLabelMapping:
+  - "Acidification Potential":
+    - "#A00007" # red, Impact Potential
+  - "Eutrophication Potential":
+    - "#A00007"
+  - "Freshwater Ecotoxicity Potential":
+    - "#A00007"
+  - "Greenhouse Gases":
+    - "#A00007"
+  - "Human Health - Cancer":
+    - "#A00007"
+  - "Human Health - Noncancer":
+    - "#A00007"
+  - "Human Health Toxicity":
+    - "#A00007"
+  - "Human Health - Respiratory Effects":
+    - "#A00007"
+  - "Ozone Depletion":
+    - "#A00007"
+  - "Smog Formation Potential":
+    - "#A00007"
+  - "Freshwater withdrawals":
+    - "#4D7CA1" # blue, Resource Use
+  - "Land use":
+    - "#4D7CA1"
+  - "Minerals and Metals Use":
+    - "#4D7CA1"
+  - "Energy Use":
+    - "#4D7CA1"
+  - "Nonrenewable Energy Use":
+    - "#4D7CA1"
+  - "Renewable Energy Use":
+    - "#4D7CA1"
+  - "Hazardous Air Pollutants":
+    - "#E67A0A" # yellow, Chemical Releases
+  - "Pesticides":
+    - "#E67A0A"
+  - "Commercial RCRA Hazardous Waste":
+    - "#654A8B" # purple, Waste Generated
+  - "Commercial Municipal Solid Waste":
+    - "#654A8B"
+  - "Commercial Construction and Demolition Debris":
+    - "#654A8B"
+  - "Value Added":
+    - "#428E55" # green, Eonomic & Social
+  - "Jobs Supported":
+    - "#428E55"
+
+# State color palette is from https://medialab.github.io/iwanthue/
+StateColorPalette: ["#d93762",
+"#44c96a",
+"#9969e4",
+"#89c13d",
+"#8b45b3",
+"#43a132",
+"#db4bb1",
+"#c5ba34",
+"#4d5ac6",
+"#e09129",
+"#6982ec",
+"#919f35",
+"#d974e1",
+"#3d8339",
+"#e43588",
+"#56bd8a",
+"#ac3e9b",
+"#84b96b",
+"#b13670",
+"#5bcbb9",
+"#d73440",
+"#4ab4dd",
+"#d04818",
+"#406dac",
+"#ee5e42",
+"#3b9987",
+"#af3733",
+"#347c52",
+"#e7699f",
+"#5f7f24",
+"#ba84d6",
+"#c99e3b",
+"#74569e",
+"#bdb76b",
+"#8a99dd",
+"#e47d45",
+"#a05e90",
+"#596222",
+"#d88bc1",
+"#876c1d",
+"#964969",
+"#88894b",
+"#e1646d",
+"#b37e48",
+"#e68c95",
+"#a74f1b",
+"#e6a573",
+"#a64d54",
+"#8c532c",
+"#d07259"]

@@ -1,948 +1,1262 @@
-# Download all IO tables from BEA iTable
-getBEAIOTables <- function () {
+url_ls <- c(IO = "https://apps.bea.gov/industry/iTables%20Static%20Files/AllTablesIO.zip",
+            imports = "https://apps.bea.gov/industry/xls/io-annual",
+            GDP = "https://apps.bea.gov/industry/Release/ZIP/UGdpByInd.zip",
+            SUP = "https://apps.bea.gov/industry/iTables%20Static%20Files/AllTablesSUP.zip",
+            margins = "https://apps.bea.gov/industry/xls/underlying-estimates"
+            )
+
+dir <- file.path(rappdirs::user_data_dir(), "USEEIO-input")
+dir.create(dir, showWarnings = FALSE)
+
+# Download and unzip all IO tables under Make-Use framework from BEA iTable
+getBEAIOTables <- function() {
   # Create the placeholder file
-  AllTablesIO <- "inst/extdata/AllTablesIO.zip"
+  AllTablesIO <- paste0(dir, "/", "AllTablesIO.zip")
   # Download all BEA IO tables into the placeholder file
-  if(!file.exists(AllTablesIO)) {
-    utils::download.file("https://apps.bea.gov//industry/iTables%20Static%20Files/AllTablesIO.zip", AllTablesIO, mode = "wb")
+  url <- url_ls["IO"]
+  if (!file.exists(AllTablesIO)) {
+    utils::download.file(url, AllTablesIO, mode = "wb")
   }
   # Get the name of all files in the zip archive
-  fname <- unzip(AllTablesIO, list = TRUE)[unzip(AllTablesIO, list = TRUE)$Length > 0, ]$Name
+  files <- unzip(AllTablesIO, list = TRUE)
+  fname <- files[files$Length > 0, ]$Name
+  if (all(fname == basename(fname))) {
+    exdir <- paste0(dir, "/", "AllTableIO")
+  } else {
+    exdir <- dir
+  }
   # Unzip the file to the designated directory
-  unzip(AllTablesIO, files = fname, exdir = "inst/extdata/AllTablesIO", overwrite = TRUE)
+  unzip(AllTablesIO, files = fname, exdir = exdir,
+        overwrite = TRUE, setTimes = TRUE)
+  # Create output
+  ls <- list("url" = url,
+             "date_accessed" = as.character(as.Date(file.mtime(AllTablesIO))),
+             "files" = basename(fname))
+  return(ls)
 }
 
-# Get BEA Detail Make (Before Redef, 2012 schema) 2007 and 2012 tables from static Excel
-getBEADetailMakeBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  DetailMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_2007_2012_Detail.xlsx"
-  for (i in c(2007, 2012)) {
-    DetailMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:411, 3:408]
-    DetailMake <- as.data.frame(apply(DetailMake, 2, as.numeric))
-    rownames(DetailMake) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:411, 1]
-    colnames(DetailMake) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:408]
-    DetailMake[is.na(DetailMake)] <- 0
-    DetailMakeList[[as.character(i)]] <- DetailMake
-  }
-  return(DetailMakeList)
-}
-Detail_Make_2012_BeforeRedef <- getBEADetailMakeBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Make_2012_BeforeRedef, overwrite = TRUE)
 
-
-# Get BEA Detail Use (PRO, Before Redef, 2012 schema) 2007 and 2012 tables from static Excel
-getBEADetailUsePROBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  DetailUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_Before_Redefinitions_PRO_2007_2012_Detail.xlsx"
-  for (i in c(2007, 2012)) {
-    DetailUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:416, 3:430]
-    DetailUse <- as.data.frame(apply(DetailUse, 2, as.numeric))
-    rownames(DetailUse) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:416, 1]
-    colnames(DetailUse) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:430]
-    DetailUse[is.na(DetailUse)] <- 0
-    DetailUseList[[as.character(i)]] <- DetailUse
-  }
-  return(DetailUseList)
-}
-Detail_Use_2012_PRO_BeforeRedef <- getBEADetailUsePROBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Use_2012_PRO_BeforeRedef, overwrite = TRUE)
-
-# Get BEA Detail Make (After Redef, 2012 schema) 2007 and 2012 tables from static Excel
-getBEADetailMakeAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  DetailMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_After_Redefinitions_2007_2012_Detail.xlsx"
-  for (i in c(2007, 2012)) {
-    DetailMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:411, 3:408]
-    DetailMake <- as.data.frame(apply(DetailMake, 2, as.numeric))
-    rownames(DetailMake) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:411, 1]
-    colnames(DetailMake) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:408]
-    DetailMake[is.na(DetailMake)] <- 0
-    DetailMakeList[[as.character(i)]] <- DetailMake
-  }
-  return(DetailMakeList)
-}
-Detail_Make_2012_AfterRedef <- getBEADetailMakeAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Make_2012_AfterRedef, overwrite = TRUE)
-
-# Get BEA Detail Use (PRO, After Redef, 2012 schema) 2007 and 2012 tables from static Excel
-getBEADetailUsePROAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  DetailUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_After_Redefinitions_PRO_2007_2012_Detail.xlsx"
-  for (i in c(2007, 2012)) {
-    DetailUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:416, 3:430]
-    DetailUse <- as.data.frame(apply(DetailUse, 2, as.numeric))
-    rownames(DetailUse) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6:416, 1]
-    colnames(DetailUse) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:430]
-    DetailUse[is.na(DetailUse)] <- 0
-    DetailUseList[[as.character(i)]] <- DetailUse
-  }
-  return(DetailUseList)
-}
-Detail_Use_2012_PRO_AfterRedef <- getBEADetailUsePROAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Use_2012_PRO_AfterRedef, overwrite = TRUE)
-
-# Get BEA Summary Make (Before Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASummaryMakeBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SummaryMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_1997-2018_Summary.xlsx"
-  for (i in 2010:2018) {
-    SummaryMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:78, 3:76]
-    SummaryMake <- as.data.frame(apply(SummaryMake, 2, as.numeric))
-    rownames(SummaryMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:77, 1],
-                               as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[78, 2])
-    colnames(SummaryMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:75],
-                               as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 76])
-    SummaryMake[is.na(SummaryMake)] <- 0
-    SummaryMakeList[[as.character(i)]] <- SummaryMake
-  }
-  return(SummaryMakeList)
-}
-Summary_Make_2010_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2010"]]
-usethis::use_data(Summary_Make_2010_BeforeRedef, overwrite = TRUE)
-Summary_Make_2011_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2011"]]
-usethis::use_data(Summary_Make_2011_BeforeRedef, overwrite = TRUE)
-Summary_Make_2012_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Make_2012_BeforeRedef, overwrite = TRUE)
-Summary_Make_2013_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2013"]]
-usethis::use_data(Summary_Make_2013_BeforeRedef, overwrite = TRUE)
-Summary_Make_2014_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2014"]]
-usethis::use_data(Summary_Make_2014_BeforeRedef, overwrite = TRUE)
-Summary_Make_2015_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2015"]]
-usethis::use_data(Summary_Make_2015_BeforeRedef, overwrite = TRUE)
-Summary_Make_2016_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2016"]]
-usethis::use_data(Summary_Make_2016_BeforeRedef, overwrite = TRUE)
-Summary_Make_2017_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2017"]]
-usethis::use_data(Summary_Make_2017_BeforeRedef, overwrite = TRUE)
-Summary_Make_2018_BeforeRedef <- getBEASummaryMakeBeforeRedef2012Schema()[["2018"]]
-usethis::use_data(Summary_Make_2018_BeforeRedef, overwrite = TRUE)
-
-# Get BEA Summary Use (PRO, Before Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASummaryUsePROBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SummaryUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_Before_Redefinitions_PRO_1997-2018_Summary.xlsx"
-  for (i in 2010:2018) {
-    SummaryUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:89, 3:100]
-    SummaryUse <- as.data.frame(apply(SummaryUse, 2, as.numeric))
-    rownames(SummaryUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:79, 1],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[80:82, 2],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[83:85, 1],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[86:89, 2])
-    colnames(SummaryUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:73],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 74:76],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 77:96],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 97:100])
-    SummaryUse[is.na(SummaryUse)] <- 0
-    SummaryUseList[[as.character(i)]] <- SummaryUse
-  }
-  return(SummaryUseList)
-}
-Summary_Use_2010_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2010"]]
-usethis::use_data(Summary_Use_2010_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2011_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2011"]]
-usethis::use_data(Summary_Use_2011_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2012_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Use_2012_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2013_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2013"]]
-usethis::use_data(Summary_Use_2013_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2014_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2014"]]
-usethis::use_data(Summary_Use_2014_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2015_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2015"]]
-usethis::use_data(Summary_Use_2015_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2016_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2016"]]
-usethis::use_data(Summary_Use_2016_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2017_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2017"]]
-usethis::use_data(Summary_Use_2017_PRO_BeforeRedef, overwrite = TRUE)
-Summary_Use_2018_PRO_BeforeRedef <- getBEASummaryUsePROBeforeRedef2012Schema()[["2018"]]
-usethis::use_data(Summary_Use_2018_PRO_BeforeRedef, overwrite = TRUE)
-
-# Get BEA Summary Make (After Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASummaryMakeAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SummaryMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_After_Redefinitions_1997-2018_Summary.xlsx"
-  for (i in 2010:2018) {
-    SummaryMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:78, 3:76]
-    SummaryMake <- as.data.frame(apply(SummaryMake, 2, as.numeric))
-    rownames(SummaryMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:77, 1],
-                               as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[78, 2])
-    colnames(SummaryMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:75],
-                               as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 76])
-    SummaryMake[is.na(SummaryMake)] <- 0
-    SummaryMakeList[[as.character(i)]] <- SummaryMake
-  }
-  return(SummaryMakeList)
-}
-Summary_Make_2010_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2010"]]
-usethis::use_data(Summary_Make_2010_AfterRedef, overwrite = TRUE)
-Summary_Make_2011_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2011"]]
-usethis::use_data(Summary_Make_2011_AfterRedef, overwrite = TRUE)
-Summary_Make_2012_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Make_2012_AfterRedef, overwrite = TRUE)
-Summary_Make_2013_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2013"]]
-usethis::use_data(Summary_Make_2013_AfterRedef, overwrite = TRUE)
-Summary_Make_2014_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2014"]]
-usethis::use_data(Summary_Make_2014_AfterRedef, overwrite = TRUE)
-Summary_Make_2015_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2015"]]
-usethis::use_data(Summary_Make_2015_AfterRedef, overwrite = TRUE)
-Summary_Make_2016_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2016"]]
-usethis::use_data(Summary_Make_2016_AfterRedef, overwrite = TRUE)
-Summary_Make_2017_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2017"]]
-usethis::use_data(Summary_Make_2017_AfterRedef, overwrite = TRUE)
-Summary_Make_2018_AfterRedef <- getBEASummaryMakeAfterRedef2012Schema()[["2018"]]
-usethis::use_data(Summary_Make_2018_AfterRedef, overwrite = TRUE)
-
-# Get BEA Summary Use (PRO, After Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASummaryUsePROAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SummaryUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_After_Redefinitions_PRO_1997-2018_Summary.xlsx"
-  for (i in 2010:2018) {
-    SummaryUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:89, 3:100]
-    SummaryUse <- as.data.frame(apply(SummaryUse, 2, as.numeric))
-    rownames(SummaryUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:79, 1],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[80:82, 2],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[83:85, 1],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[86:89, 2])
-    colnames(SummaryUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:73],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 74:76],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 77:96],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 97:100])
-    SummaryUse[is.na(SummaryUse)] <- 0
-    SummaryUseList[[as.character(i)]] <- SummaryUse
-  }
-  return(SummaryUseList)
-}
-Summary_Use_2010_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2010"]]
-usethis::use_data(Summary_Use_2010_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2011_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2011"]]
-usethis::use_data(Summary_Use_2011_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2012_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Use_2012_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2013_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2013"]]
-usethis::use_data(Summary_Use_2013_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2014_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2014"]]
-usethis::use_data(Summary_Use_2014_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2015_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2015"]]
-usethis::use_data(Summary_Use_2015_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2016_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2016"]]
-usethis::use_data(Summary_Use_2016_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2017_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2017"]]
-usethis::use_data(Summary_Use_2017_PRO_AfterRedef, overwrite = TRUE)
-Summary_Use_2018_PRO_AfterRedef <- getBEASummaryUsePROAfterRedef2012Schema()[["2018"]]
-usethis::use_data(Summary_Use_2018_PRO_AfterRedef, overwrite = TRUE)
-
-# Get BEA Sector Make (Before Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASectorMakeBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SectorMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_1997-2018_Sector.xlsx"
-  for (i in 2010:2018) {
-    SectorMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:22, 3:20]
-    SectorMake <- as.data.frame(apply(SectorMake, 2, as.numeric))
-    rownames(SectorMake) <- c(substring(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:21, 1], 2),
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[22, 2])
-    colnames(SectorMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:19],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 20])
-    SectorMake[is.na(SectorMake)] <- 0
-    SectorMakeList[[as.character(i)]] <- SectorMake
-  }
-  return(SectorMakeList)
-}
-Sector_Make_2010_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2010"]]
-usethis::use_data(Sector_Make_2010_BeforeRedef, overwrite = TRUE)
-Sector_Make_2011_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2011"]]
-usethis::use_data(Sector_Make_2011_BeforeRedef, overwrite = TRUE)
-Sector_Make_2012_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Sector_Make_2012_BeforeRedef, overwrite = TRUE)
-Sector_Make_2013_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2013"]]
-usethis::use_data(Sector_Make_2013_BeforeRedef, overwrite = TRUE)
-Sector_Make_2014_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2014"]]
-usethis::use_data(Sector_Make_2014_BeforeRedef, overwrite = TRUE)
-Sector_Make_2015_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2015"]]
-usethis::use_data(Sector_Make_2015_BeforeRedef, overwrite = TRUE)
-Sector_Make_2016_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2016"]]
-usethis::use_data(Sector_Make_2016_BeforeRedef, overwrite = TRUE)
-Sector_Make_2017_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2017"]]
-usethis::use_data(Sector_Make_2017_BeforeRedef, overwrite = TRUE)
-Sector_Make_2018_BeforeRedef <- getBEASectorMakeBeforeRedef2012Schema()[["2018"]]
-usethis::use_data(Sector_Make_2018_BeforeRedef, overwrite = TRUE)
-
-# Get BEA Sector Use (PRO, Before Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASectorUsePROBeforeRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SectorUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_Before_Redefinitions_PRO_1997-2018_Sector.xlsx"
-  for (i in 2010:2018) {
-    SectorUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:33, 3:30]
-    SectorUse <- as.data.frame(apply(SectorUse, 2, as.numeric))
-    rownames(SectorUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:23, 1],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[24:26, 2],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[27:29, 1],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[30:33, 2])
-    colnames(SectorUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:17],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 18:20],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 21:26],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 27:30])
-    SectorUse[is.na(SectorUse)] <- 0
-    SectorUseList[[as.character(i)]] <- SectorUse
-  }
-  return(SectorUseList)
-}
-Sector_Use_2010_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2010"]]
-usethis::use_data(Sector_Use_2010_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2011_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2011"]]
-usethis::use_data(Sector_Use_2011_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2012_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Sector_Use_2012_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2013_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2013"]]
-usethis::use_data(Sector_Use_2013_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2014_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2014"]]
-usethis::use_data(Sector_Use_2014_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2015_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2015"]]
-usethis::use_data(Sector_Use_2015_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2016_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2016"]]
-usethis::use_data(Sector_Use_2016_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2017_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2017"]]
-usethis::use_data(Sector_Use_2017_PRO_BeforeRedef, overwrite = TRUE)
-Sector_Use_2018_PRO_BeforeRedef <- getBEASectorUsePROBeforeRedef2012Schema()[["2018"]]
-usethis::use_data(Sector_Use_2018_PRO_BeforeRedef, overwrite = TRUE)
-
-# Get BEA Sector Make (After Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASectorMakeAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SectorMakeList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOMake_After_Redefinitions_1997-2018_Sector.xlsx"
-  for (i in 2010:2018) {
-    SectorMake <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:22, 3:20]
-    SectorMake <- as.data.frame(apply(SectorMake, 2, as.numeric))
-    rownames(SectorMake) <- c(substring(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:21, 1], 2),
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[22, 2])
-    colnames(SectorMake) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:19],
-                              as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 20])
-    SectorMake[is.na(SectorMake)] <- 0
-    SectorMakeList[[as.character(i)]] <- SectorMake
-  }
-  return(SectorMakeList)
-}
-Sector_Make_2012_AfterRedef <- getBEASectorMakeAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Sector_Make_2012_AfterRedef, overwrite = TRUE)
-
-# Get BEA Sector Use (PRO, After Redef, 2012 schema) 2010:2018 tables from static Excel
-getBEASectorUsePROAfterRedef2012Schema <- function () {
-  # Download all IO tables from BEA iTable
-  getBEAIOTables()
-  # Load desired excel file
-  SectorUseList <- list()
-  FileName <- "inst/extdata/AllTablesIO/IOUse_After_Redefinitions_PRO_1997-2018_Sector.xlsx"
-  for (i in 2010:2018) {
-    SectorUse <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:33, 3:30]
-    SectorUse <- as.data.frame(apply(SectorUse, 2, as.numeric))
-    rownames(SectorUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[7:23, 1],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[24:26, 2],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[27:29, 1],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[30:33, 2])
-    colnames(SectorUse) <- c(as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 3:17],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 18:20],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[5, 21:26],
-                             as.data.frame(readxl::read_excel(FileName, sheet = as.character(i)))[6, 27:30])
-    SectorUse[is.na(SectorUse)] <- 0
-    SectorUseList[[as.character(i)]] <- SectorUse
-  }
-  return(SectorUseList)
-}
-Sector_Use_2010_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2010"]]
-usethis::use_data(Sector_Use_2010_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2011_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2011"]]
-usethis::use_data(Sector_Use_2011_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2012_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2012"]]
-usethis::use_data(Sector_Use_2012_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2013_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2013"]]
-usethis::use_data(Sector_Use_2013_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2014_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2014"]]
-usethis::use_data(Sector_Use_2014_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2015_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2015"]]
-usethis::use_data(Sector_Use_2015_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2016_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2016"]]
-usethis::use_data(Sector_Use_2016_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2017_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2017"]]
-usethis::use_data(Sector_Use_2017_PRO_AfterRedef, overwrite = TRUE)
-Sector_Use_2018_PRO_AfterRedef <- getBEASectorUsePROAfterRedef2012Schema()[["2018"]]
-usethis::use_data(Sector_Use_2018_PRO_AfterRedef, overwrite = TRUE)
-
-# Get BEA Detail Import (Before Redef, 2012 schema) 2007 and 2012 from static Excel
-getBEADetailImportBeforeRedef2012Schema <- function () {
-  DetailImportList <- list()
-  # read excel sheet
-  FileName <- "inst/extdata/ImportMatrices_Before_Redefinitions_DET_2007_2012.xlsx"
-  if(!file.exists(FileName)) {
-    utils::download.file(paste("https://apps.bea.gov/industry/xls/io-annual", FileName, sep = "/"), FileName, mode = "wb")
-  }
-  for (i in c(2007, 2012)) {
-    DetailImport <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[7:411, 3:429]
-    DetailImport <- as.data.frame(apply(DetailImport, 2, as.numeric))
-    rownames(DetailImport) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[7:411, 1]
-    colnames(DetailImport) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[6, 3:429]
-    DetailImport[is.na(DetailImport)] <- 0
-    DetailImportList[[as.character(i)]] <- DetailImport
-  }
-  return(DetailImportList)
-}
-Detail_Import_2012_BeforeRedef <- getBEADetailImportBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Import_2012_BeforeRedef, overwrite = TRUE)
-
-
-
-# Get BEA Summary Import (Before Redef, 2012 schema) 2010:2018 from static Excel
-getBEASummaryImportBeforeRedef2012Schema <- function () {
-  SummaryImportList <- list()
-  # read excel sheet
-  FileName <- "inst/extdata/ImportMatrices_Before_Redefinitions_SUM_1997-2018.xlsx"
-  if(!file.exists(FileName)) {
-    utils::download.file("https://apps.bea.gov/industry/xls/io-annual/ImportMatrices_Before_Redefinitions_SUM_1997-2018.xlsx", FileName, mode="wb")
-  }
-  for (i in 2010:2018) {
-    SummaryImport <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[7:79, 3:95]
-    SummaryImport <- as.data.frame(apply(SummaryImport, 2, as.numeric))
-    rownames(SummaryImport) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[7:79, 1]
-    colnames(SummaryImport) <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(i), col_names = FALSE))[6, 3:95]
-    SummaryImport[is.na(SummaryImport)] <- 0
-    SummaryImportList[[as.character(i)]] <- SummaryImport
-  }
-  return(SummaryImportList)
-}
-Summary_Import_2010_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2010"]]
-usethis::use_data(Summary_Import_2010_BeforeRedef, overwrite = TRUE)
-Summary_Import_2011_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2011"]]
-usethis::use_data(Summary_Import_2011_BeforeRedef, overwrite = TRUE)
-Summary_Import_2012_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Import_2012_BeforeRedef, overwrite = TRUE)
-Summary_Import_2013_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2013"]]
-usethis::use_data(Summary_Import_2013_BeforeRedef, overwrite = TRUE)
-Summary_Import_2014_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2014"]]
-usethis::use_data(Summary_Import_2014_BeforeRedef, overwrite = TRUE)
-Summary_Import_2015_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2015"]]
-usethis::use_data(Summary_Import_2015_BeforeRedef, overwrite = TRUE)
-Summary_Import_2016_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2016"]]
-usethis::use_data(Summary_Import_2016_BeforeRedef, overwrite = TRUE)
-Summary_Import_2017_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2017"]]
-usethis::use_data(Summary_Import_2017_BeforeRedef, overwrite = TRUE)
-Summary_Import_2018_BeforeRedef <- getBEASummaryImportBeforeRedef2012Schema()[["2018"]]
-usethis::use_data(Summary_Import_2018_BeforeRedef, overwrite = TRUE)
-
-
-
-# Download all GDP tables from BEA iTable
-getBEAUnderlyingTables <- function () {
+# Download and unzip all Supply and Use tables from BEA AllTablesSUP.zip
+getBEASupplyUseTables <- function() {
   # Create the placeholder file
-  AllTablesUnderlying <- "inst/extdata/AllTablesUnderlying.zip"
+  AllTablesSUP <- paste0(dir, "/", "AllTablesIOSUP.zip")
   # Download all BEA IO tables into the placeholder file
-  if(!file.exists(AllTablesUnderlying)) {
-    utils::download.file("https://apps.bea.gov//industry/iTables%20Static%20Files/AllTablesUnderlying.zip", AllTablesUnderlying, mode = "wb")
+  url <- url_ls["SUP"]
+  if (!file.exists(AllTablesSUP)) {
+    utils::download.file(url, AllTablesSUP, mode = "wb")
   }
   # Get the name of all files in the zip archive
-  fname <- unzip(AllTablesUnderlying, list = TRUE)[unzip(AllTablesUnderlying, list = TRUE)$Length > 0, ]$Name
+  files <- unzip(AllTablesSUP, list = TRUE)
+  fname <- files[files$Length > 0, ]$Name
+  if (all(fname == basename(fname))) {
+    exdir <- paste0(dir, "/", "AllTablesSUP")
+  } else {
+    exdir <- dir
+  }
   # Unzip the file to the designated directory
-  unzip(AllTablesUnderlying, files = fname, exdir = "inst/extdata/AllTablesUnderlying", overwrite = TRUE)
+  unzip(AllTablesSUP, files = fname, exdir = exdir,
+        overwrite = TRUE, setTimes = TRUE)
+  # Create output
+  ls <- list("url" = url,
+             "date_accessed" = as.character(as.Date(file.mtime(AllTablesSUP))),
+             "files" = basename(fname))
+  return(ls)
 }
 
-# Get Detail BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
-getBEADetailGrossOutput2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
-  DetailGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:422, c(2, 13:24)]
-  colnames(DetailGrossOutput) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
-  return(DetailGrossOutput)
-}
-# Get Summary BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
-getBEASummaryGrossOutput2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SummaryGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SummaryGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
-  return(SummaryGrossOutput)
-}
-# Get Sector BEA Gross Output (2012 schema) 2007-2017 tables from static Excel
-getBEASectorGrossOutput2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SectorGrossOutput <- readxl::read_excel(FileName, sheet = "GO")[6:197, c(2, 13:24)]
-  colnames(SectorGrossOutput) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "GO"))[5, 13:24])
-  return(SectorGrossOutput)
+# Download and unzip all GDP tables from BEA
+getBEAUnderlyingTables <- function() {
+  # Create the placeholder file
+  UnderlyingTables <- paste0(dir, "/", "UGdpByInd.zip")
+  # Download all BEA IO tables into the placeholder file
+  url <- url_ls["GDP"]
+  if (!file.exists(UnderlyingTables)) {
+    utils::download.file(url, UnderlyingTables, mode = "wb")
+  }
+  # Get the name of all files in the zip archive
+  files <- unzip(UnderlyingTables, list = TRUE)
+  fname <- files[files$Length > 0, ]$Name
+  if (all(fname == basename(fname))) {
+    exdir <- paste0(dir, "/", "UGdpByInd")
+  } else {
+    exdir <- dir
+  }
+  # Unzip the file to the designated directory
+  unzip(UnderlyingTables, files = fname, exdir = exdir,
+        overwrite = TRUE, setTimes = TRUE)
+  # Create output
+  ls <- list("url" = url,
+             "date_accessed" = as.character(as.Date(file.mtime(UnderlyingTables))),
+             "files" = basename(fname))
+  return(ls)
 }
 
-#' Adjust gross output ($) from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
-#' @return A list contains IO-based gross output at Detail, Summary, and Sector IO levels.
-adjustBEAGrossOutputtoIOIndustry2012Schema <- function () {
-  # Detail
-  DetailGrossOutput <- getBEADetailGrossOutput2012Schema()
+#' Extract table from BEA data 
+#' @param year, str IOschema year
+#' @param filename, str e.g. "IOUse_Before_Redefinitions_PRO"
+#' @param ioschema, str e.g. "Detail"
+unpackFile <- function(year, filename, ioschema) {
+  # Download data
+  url <- getBEAIOTables()[["url"]]
+  date_accessed <- getBEAIOTables()[["date_accessed"]]
+  files <- getBEAIOTables()[["files"]]
+  # Load data
+  FileName <- file.path(rappdirs::user_data_dir(), "USEEIO-input", "AllTableIO",
+                        files[startsWith(files, filename) &
+                                endsWith(files, paste0(ioschema, ".xlsx"))])
+  date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+  df <- as.data.frame(readxl::read_excel(FileName,
+                                         sheet = as.character(year)))
+  # return multiple items to access later
+  ls <- list("df" = df,
+             "url" = url,
+             "date_accessed" = date_accessed,
+             "date_last_modified" = date_last_modified)
+  return(ls)
+}
+
+#' Process dataframe to remove spaces and assign col/row names
+#' @param df, dataframe of matrix (i.e., make or use table)
+processDetailMatrix <- function(df) {
+  # Assign row and column names
+  df <- df[!is.na(df[, 2]), ]
+  colnames(df) <- df[1, ]
+  rownames(df) <- df$Code
+  # Trim table, convert all values to numeric, assign row names
+  df <- as.data.frame(lapply(df[-1, -c(1:2)], as.numeric),
+                      check.names = FALSE,
+                      row.names = df[-1, 1])
+  # Replace NA with zero
+  df[is.na(df)] <- 0
+  return(df)
+}
+
+#' Process dataframe to remove spaces and assign col/row names
+#' @param df, dataframe of matrix (i.e., make or use table)
+processSummaryMatrix <- function(df) {
+  # Trim table, assign column names
+  df <- df[!is.na(df[, 2]), ]
+  colnames(df) <- df[1, ]
+  colname_check <- is.na(colnames(df))
+  colnames(df)[colname_check] <- df[2, colname_check]
+  # Fill NA in code column with corresponding name
+  df[is.na(df[, 1]), 1] <- df[is.na(df[, 1]), 2]
+  # Convert all values to numeric, assign row names
+  df <- as.data.frame(lapply(df[-c(1:2), -c(1:2)], as.numeric),
+                              check.names = FALSE,
+                              row.names = df[-c(1:2), 1])
+  # Replace NA with zero
+  df[is.na(df)] <- 0
+  return(df)
+}
+
+#' Write RDA and json metadata files
+#' @param df, dataframe of matrix (i.e., make or use table)
+#' @param year, str IO data year
+#' @param name, str
+#' @param ls, list of metadata items
+#' @param scehma_year str of schema year (e.g., 2012 or 2017)
+writeFile <- function(df, year, name, ls, schema_year) {
+  if (!is.null(schema_year)){
+    # append schema to filename e.g., _17sch
+    name <- paste0(name, "_", substring(schema_year, 3, 4), "sch")
+  }
+  # Write data to .rda
+  writeDatatoRDA(data = df,
+                 data_name = name)
+  # Write metadata to JSON
+  writeMetadatatoJSON(package = "useeior",
+                      name = name,
+                      year = year,
+                      source = "US Bureau of Economic Analysis",
+                      url = ls[["url"]],
+                      date_last_modified = ls[["date_last_modified"]],
+                      date_accessed = ls[["date_accessed"]])  
+}
+
+# Get BEA Detail Make (Before Redef) table from static Excel
+getBEADetailMakeBeforeRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOMake_Before_Redefinitions", ioschema="Detail")
+  DetailMake <- data.frame(ls["df"])
+  DetailMake <- processDetailMatrix(DetailMake)
+  writeFile(df = DetailMake, year = year,
+            name = paste0("Detail_Make_", year, "_BeforeRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Detail Use (PRO, Before Redef) table from static Excel
+getBEADetailUsePROBeforeRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOUse_Before_Redefinitions_PRO", ioschema="Detail")
+  DetailUse <- data.frame(ls["df"])
+  DetailUse <- processDetailMatrix(DetailUse)
+  writeFile(df = DetailUse, year = year,
+            name = paste0("Detail_Use_", year, "_PRO_BeforeRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Detail Use (PUR, Before Redef) table from static Excel
+getBEADetailUsePURBeforeRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOUse_Before_Redefinitions_PUR", ioschema="Detail")
+  DetailUse <- data.frame(ls["df"])
+  DetailUse <- processDetailMatrix(DetailUse)
+  writeFile(df = DetailUse, year = year,
+            name = paste0("Detail_Use_", year, "_PUR_BeforeRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Detail Make (After Redef) table from static Excel
+getBEADetailMakeAfterRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOMake_After_Redefinitions", ioschema="Detail ")
+  ### ^^ Typo in filename from BEA requires extra space in ioschema ^^^
+  DetailMake <- data.frame(ls["df"])
+  DetailMake <- processDetailMatrix(DetailMake)
+  writeFile(df = DetailMake, year = year,
+            name = paste0("Detail_Make_", year, "_AfterRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Detail Use (PRO, After Redef) table from static Excel
+getBEADetailUsePROAfterRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOUse_After_Redefinitions_PRO", ioschema="Detail")
+  DetailUse <- data.frame(ls["df"])
+  DetailUse <- processDetailMatrix(DetailUse)
+  writeFile(df = DetailUse, year = year,
+            name = paste0("Detail_Use_", year, "_PRO_AfterRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Detail Use (PUR, After Redef) table from static Excel
+getBEADetailUsePURAfterRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOUse_After_Redefinitions_PUR", ioschema="Detail")
+  DetailUse <- data.frame(ls["df"])
+  DetailUse <- processDetailMatrix(DetailUse)
+  writeFile(df = DetailUse, year = year,
+            name = paste0("Detail_Use_", year, "_PUR_AfterRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Summary Make (Before Redef) table from static Excel
+getBEASummaryMakeBeforeRedef <- function(year) {
+  end_year <- 2022
+  for (y in 2017:end_year) {
+    ls <- unpackFile(y, filename="IOMake_Before_Redefinitions", ioschema="Summary")
+    SummaryMake <- data.frame(ls["df"])
+    SummaryMake <- processSummaryMatrix(SummaryMake)
+    writeFile(df = SummaryMake, year = y,
+              name = paste0("Summary_Make_", y, "_BeforeRedef"), ls = ls,
+              schema_year = year)
+  }
+}
+
+# Get BEA Summary Use (PRO, Before Redef) table from static Excel
+getBEASummaryUsePROBeforeRedef <- function(year) {
+  end_year <- 2022
+  for (y in 2017:end_year) {
+    ls <- unpackFile(y, filename="IOUse_Before_Redefinitions_PRO", ioschema="Summary")
+    SummaryUse <- data.frame(ls["df"])
+    SummaryUse <- processSummaryMatrix(SummaryUse)
+    writeFile(df = SummaryUse, year = y,
+              name = paste0("Summary_Use_", y, "_PRO_BeforeRedef"), ls = ls,
+              schema_year = year)
+  }
+}
+
+# Get BEA Summary Use (PUR, Before Redef) table from static Excel
+getBEASummaryUsePURBeforeRedef <- function(year) {
+  ls <- unpackFile(year, filename="IOUse_Before_Redefinitions_PUR", ioschema="Summary")
+  SummaryUse <- data.frame(ls["df"])
+  SummaryUse <- processSummaryMatrix(SummaryUse)
+  writeFile(df = SummaryUse, year = year,
+            name = paste0("Summary_Use_", year, "_PUR_BeforeRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Summary Make (After Redef) table from static Excel
+getBEASummaryMakeAfterRedef <- function(year) {
+  end_year <- 2022
+  for (y in 2017:end_year) {
+    ls <- unpackFile(y, filename="IOMake_After_Redefinitions", ioschema="Summary")
+    SummaryMake <- data.frame(ls["df"])
+    SummaryMake <- processSummaryMatrix(SummaryMake)
+    writeFile(df = SummaryMake, year = y,
+              name = paste0("Summary_Make_", y, "_AfterRedef"), ls = ls,
+              schema_year = year)
+  }
+}
+
+# Get BEA Summary Use (PRO, After Redef) table from static Excel
+getBEASummaryUsePROAfterRedef <- function(year) {
+  end_year <- 2022
+  for (y in 2017:end_year) {
+    ls <- unpackFile(y, filename="IOUse_After_Redefinitions_PRO", ioschema="Summary")
+    SummaryUse <- data.frame(ls["df"])
+    SummaryUse <- processSummaryMatrix(SummaryUse)
+    writeFile(df = SummaryUse, year = y,
+              name = paste0("Summary_Use_", y, "_PRO_AfterRedef"), ls = ls,
+              schema_year = year)
+  }
+}
+
+# # Get BEA Sector Make (Before Redef, 2012 schema) table from static Excel
+# getBEASectorMakeBeforeRedef2012Schema <- function() {
+#   # Download data
+#   url <- getBEAIOTables()[["url"]]
+#   date_accessed <- getBEAIOTables()[["date_accessed"]]
+#   files <- getBEAIOTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "IOMake_Before_Redefinitions") &
+#                   endsWith(files, "Sector.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesIO", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   # Load data
+#   for (year in 2010:end_year) {
+#     SectorMake <- data.frame(readxl::read_excel(FileName,
+#                                                 sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorMake <- SectorMake[!is.na(SectorMake[, 2]), ]
+#     colnames(SectorMake) <- SectorMake[1, ]
+#     colname_check <- is.na(colnames(SectorMake))
+#     colnames(SectorMake)[colname_check] <- SectorMake[2, colname_check]
+#     # Fill NA in code column with corresponding name
+#     SectorMake[is.na(SectorMake[, 1]), 1] <- SectorMake[is.na(SectorMake[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorMake <- as.data.frame(lapply(SectorMake[-c(1:2), -c(1:2)], as.numeric),
+#                                 check.names = FALSE,
+#                                 row.names = SectorMake[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorMake[is.na(SectorMake)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorMake,
+#                    data_name = paste0("Sector_Make_", year, "_BeforeRedef"))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Make_", year, "_BeforeRedef"),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+# 
+# # Get BEA Sector Use (PRO, Before Redef, 2012 schema) table from static Excel
+# getBEASectorUsePROBeforeRedef2012Schema <- function() {
+#   # Download data
+#   url <- getBEAIOTables()[["url"]]
+#   date_accessed <- getBEAIOTables()[["date_accessed"]]
+#   files <- getBEAIOTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "IOUse_Before_Redefinitions_PRO") &
+#                   endsWith(files, "Sector.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesIO", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   for (year in 2010:end_year) {
+#     SectorUse <- data.frame(readxl::read_excel(FileName,
+#                                                sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorUse <- SectorUse[!is.na(SectorUse[, 2]), ]
+#     colnames(SectorUse) <- SectorUse[1, ]
+#     colname_check <- is.na(colnames(SectorUse))
+#     colnames(SectorUse)[colname_check] <- SectorUse[2, colname_check]
+#     # Fill NA in code column with corresponding name
+#     SectorUse[is.na(SectorUse[, 1]), 1] <- SectorUse[is.na(SectorUse[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorUse <- as.data.frame(lapply(SectorUse[-c(1:2), -c(1:2)], as.numeric),
+#                                check.names = FALSE,
+#                                row.names = SectorUse[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorUse[is.na(SectorUse)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorUse,
+#                    data_name = paste0("Sector_Use_", year, "_PRO_BeforeRedef"))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Use_", year, "_PRO_BeforeRedef"),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+# 
+# # Get BEA Sector Use (PUR, Before Redef, 2012 schema) table from static Excel
+# getBEASectorUsePURBeforeRedef2012Schema <- function(year) {
+#   # Download data
+#   url <- getBEAIOTables()[["url"]]
+#   date_accessed <- getBEAIOTables()[["date_accessed"]]
+#   files <- getBEAIOTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "IOUse_Before_Redefinitions_PUR") &
+#                   endsWith(files, "Sector.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesIO", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Load data
+#   SectorUse <- data.frame(readxl::read_excel(FileName,
+#                                              sheet = as.character(year)))
+#   # Trim table, assign column names
+#   SectorUse <- SectorUse[!is.na(SectorUse[, 2]), ]
+#   colnames(SectorUse) <- SectorUse[1, ]
+#   colname_check <- is.na(colnames(SectorUse))
+#   colnames(SectorUse)[colname_check] <- SectorUse[2, colname_check]
+#   # Fill NA in code column with corresponding name
+#   SectorUse[is.na(SectorUse[, 1]), 1] <- SectorUse[is.na(SectorUse[, 1]), 2]
+#   # Convert all values to numeric, assign row names
+#   SectorUse <- as.data.frame(lapply(SectorUse[-c(1:2), -c(1:2)], as.numeric),
+#                              check.names = FALSE,
+#                              row.names = SectorUse[-c(1:2), 1])
+#   # Replace NA with zero
+#   SectorUse[is.na(SectorUse)] <- 0
+#   # Write data to .rda
+#   writeDatatoRDA(data = SectorUse,
+#                  data_name = paste0("Sector_Use_", year, "_PUR_BeforeRedef"))
+#   # Write metadata to JSON
+#   writeMetadatatoJSON(package = "useeior",
+#                       name = paste0("Sector_Use_", year, "_PUR_BeforeRedef"),
+#                       year = year,
+#                       source = "US Bureau of Economic Analysis",
+#                       url = url,
+#                       date_last_modified = date_last_modified,
+#                       date_accessed = date_accessed)
+# }
+# 
+# # Get BEA Sector Make (After Redef, 2012 schema) table from static Excel
+# getBEASectorMakeAfterRedef2012Schema <- function() {
+#   # Download data
+#   url <- getBEAIOTables()[["url"]]
+#   date_accessed <- getBEAIOTables()[["date_accessed"]]
+#   files <- getBEAIOTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "IOMake_After_Redefinitions") &
+#                   endsWith(files, "Sector.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesIO", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   # Load data
+#   for (year in 2010:end_year) {
+#     SectorMake <- data.frame(readxl::read_excel(FileName,
+#                                                 sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorMake <- SectorMake[!is.na(SectorMake[, 2]), ]
+#     colnames(SectorMake) <- SectorMake[1, ]
+#     colname_check <- is.na(colnames(SectorMake))
+#     colnames(SectorMake)[colname_check] <- SectorMake[2, colname_check]
+#     # Fill NA in code column with corresponding name
+#     SectorMake[is.na(SectorMake[, 1]), 1] <- SectorMake[is.na(SectorMake[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorMake <- as.data.frame(lapply(SectorMake[-c(1:2), -c(1:2)], as.numeric),
+#                                 check.names = FALSE,
+#                                 row.names = SectorMake[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorMake[is.na(SectorMake)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorMake,
+#                    data_name = paste0("Sector_Make_", year, "_AfterRedef"))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Make_", year, "_AfterRedef"),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+# 
+# # Get BEA Sector Use (PRO, After Redef, 2012 schema) table from static Excel
+# getBEASectorUsePROAfterRedef2012Schema <- function() {
+#   # Download data
+#   url <- getBEAIOTables()[["url"]]
+#   date_accessed <- getBEAIOTables()[["date_accessed"]]
+#   files <- getBEAIOTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "IOUse_After_Redefinitions_PRO") &
+#                   endsWith(files, "Sector.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesIO", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   for (year in 2010:end_year) {
+#     SectorUse <- data.frame(readxl::read_excel(FileName,
+#                                                sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorUse <- SectorUse[!is.na(SectorUse[, 2]), ]
+#     colnames(SectorUse) <- SectorUse[1, ]
+#     colname_check <- is.na(colnames(SectorUse))
+#     colnames(SectorUse)[colname_check] <- SectorUse[2, colname_check]
+#     # Fill NA in code column with corresponding name
+#     SectorUse[is.na(SectorUse[, 1]), 1] <- SectorUse[is.na(SectorUse[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorUse <- as.data.frame(lapply(SectorUse[-c(1:2), -c(1:2)], as.numeric),
+#                                check.names = FALSE,
+#                                row.names = SectorUse[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorUse[is.na(SectorUse)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorUse,
+#                    data_name = paste0("Sector_Use_", year, "_PRO_AfterRedef"))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Use_", year, "_PRO_AfterRedef"),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+
+# Get BEA Detail Import (Before Redef schema) from static Excel
+getBEADetailImportBeforeRedef <- function(year) {
+  # Download data
+  file <- paste0("ImportMatrices_Before_Redefinitions_DET_", year, ".xlsx")
+  url <- file.path(url_ls["imports"], file)
+  FileName <- file.path(dir, "/", file)
+  if (!file.exists(FileName)) {
+    utils::download.file(url, FileName, mode = "wb")
+  }
+  # Load data
+  DetailImport <- as.data.frame(readxl::read_excel(FileName,
+                                                   sheet = as.character(year)))
+  DetailImport <- processDetailMatrix(DetailImport)
+  ls <- list("url" = url,
+             "date_accessed" = as.character(as.Date(file.mtime(FileName))),
+             "date_last_modified" = "unknown")
+  writeFile(df = DetailImport, year = year,
+            name = paste0("Detail_Import_", year, "_BeforeRedef"), ls = ls,
+            schema_year = year)
+}
+
+# Get BEA Summary Import (Before Redef) from static Excel
+getBEASummaryImportBeforeRedef <- function(year) {
+  # Download data
+  file <- "ImportMatrices_Before_Redefinitions_SUM_2017-2022.xlsx"
+  url <- file.path(url_ls["imports"], file)
+  FileName <- file.path(dir, file)
+  if (!file.exists(FileName)) {
+    utils::download.file(url, FileName, mode = "wb")
+  }
+  end_year <- 2022
+  # Load data
+  for (y in 2017:end_year) {
+    SummaryImport <- data.frame(readxl::read_excel(FileName,
+                                                   sheet = as.character(year)))
+    SummaryImport <- processSummaryMatrix(SummaryImport)
+    ls <- list("url" = url,
+               "date_accessed" = as.character(as.Date(file.mtime(FileName))),
+               "date_last_modified" = "2024-02-01") # page last modified
+    writeFile(df = SummaryImport, year = y,
+              name = paste0("Summary_Import_", y, "_BeforeRedef"), ls = ls,
+              schema_year = year)
+  }
+}
+
+
+#' Get Detail BEA Gross Output
+#' @param level, str "Detail", "Summary", or "Sector"
+getBEAGrossOutput <- function(level) {
+  # Download data
+  files <- getBEAUnderlyingTables()[["files"]]
+  # Prepare file name
+  file <- files[startsWith(files, "GrossOutput")]
+  FileName <- file.path(dir, "UGdpByInd", file)
+  # Load data
+  content <- na.omit(as.data.frame(readxl::read_excel(FileName,
+                                                      sheet = "Contents",
+                                                      na = "")))
+  if(level=="Detail"){
+    tag = "U.Gross Output by Industry - Detail Level"
+  } else {
+    tag = "U.Gross Output by Industry"
+  }
+  sheet <- paste0(content[content$Title == tag, "Code"], "-A")
+  GrossOutput <- as.data.frame(readxl::read_excel(FileName, sheet = sheet))
+  # Trim table, assign column names
+  GrossOutput <- GrossOutput[!is.na(GrossOutput[, 4]), ]
+  colnames(GrossOutput) <- GrossOutput[1, ]
+  sector <- GrossOutput[-1, 2]
+  # Convert all values to numeric, assign row names
+  GrossOutput <- cbind.data.frame(sector, 
+                                  lapply(GrossOutput[-1, -c(1:3)], as.numeric))
+  return(GrossOutput)
+}
+
+
+# Map gross output ($) from GDP industries to IO industries at Detail, Summary, and Sector IO levels.
+mapBEAGrossOutputtoIOIndustry <- function(schema_year) {
+  ls <- getBEAUnderlyingTables()
+  FileName <- file.path(dir, "UGdpByInd",
+                        ls[["files"]][startsWith(ls[["files"]], "GrossOutput")])
+  ls["date_last_modified"] <- as.character(as.Date(file.mtime(FileName)))
+  ### Detail ###
+  DetailGrossOutput <- getBEAGrossOutput(level="Detail")
   # Determine year range
   year_range <- colnames(DetailGrossOutput)[2:ncol(DetailGrossOutput)]
-  # Attach BEA Detail industry code
-  DetailGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                             sep = ",", header = TRUE)
-  DetailGrossOutputIO <- merge(DetailGDPIndustrytoIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry", all.y = TRUE)
-  # Convert values to numeric format
-  DetailGrossOutputIO[, year_range] <- as.data.frame(apply(DetailGrossOutputIO[, year_range], 2, as.numeric))
+  # Map BEA Detail industry code to IO code
+  Detail_mapping <- utils::read.table(system.file("extdata",
+                                                  "Crosswalk_DetailGDPIndustrytoIO.csv",
+                                                  package = "useeior"),
+                                      sep = ",", header = TRUE,
+                                      stringsAsFactors = FALSE,
+                                      quote = "\"")
+  Detail_mapping <- Detail_mapping[,c("Gross_Output_Detail_Industry",
+                                      paste0("BEA_", schema_year, "_Detail_Code"))]
+  colnames(Detail_mapping) <- c("sector", "BEA_Detail_Code")
+  DetailGrossOutputIO <- merge(Detail_mapping, DetailGrossOutput,
+                               by = "sector",
+                               all.y = TRUE)
   # Aggregate by BEA Detail industry code
-  DetailGrossOutputIO <- stats::aggregate(DetailGrossOutputIO[, year_range], by = list(DetailGrossOutputIO$BEA_2012_Detail_Code), sum)
-  # Assign rownames as sector code
+  DetailGrossOutputIO <- stats::aggregate(DetailGrossOutputIO[, year_range],
+                                          by = list(DetailGrossOutputIO$BEA_Detail_Code),
+                                          sum)
+  # Assign sector code to row names
   rownames(DetailGrossOutputIO) <- DetailGrossOutputIO[, 1]
   DetailGrossOutputIO[, 1] <- NULL
-  
-  # Summary
-  SummaryGrossOutput <- getBEASummaryGrossOutput2012Schema()
-  # Attach IO industry
-  SummaryGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_SummaryGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                              sep = ",", header = TRUE)
-  SummaryGrossOutputIO <- cbind(SummaryGDPIndustrytoIO, SummaryGrossOutput)
+
+  ### Summary ###
+  SummaryGrossOutput <- getBEAGrossOutput(level="Summary")
+  # Map BEA Summary industry code to IO code
+  Summary_mapping <- utils::read.table(system.file("extdata",
+                                                   paste0("Crosswalk_SummaryGDPIndustrytoIO", 2012, "Schema.csv"),
+                                                   package = "useeior"),
+                                       sep = ",", header = TRUE,
+                                       stringsAsFactors = FALSE)
+  colnames(Summary_mapping) <- c("sector", "BEA_Summary_Code")
+  ## TODO can update crosswalk file for 2017, 2017 summary schema is same as 2012 ^^
+  SummaryGrossOutputIO <- cbind(Summary_mapping, SummaryGrossOutput)
   # Keep Summary rows
-  SummaryGrossOutputIO <- SummaryGrossOutputIO[!SummaryGrossOutputIO$BEA_2012_Summary_Code == "", c("BEA_2012_Summary_Code", year_range)]
-  # Assign rownames as sector code
+  SummaryGrossOutputIO <- SummaryGrossOutputIO[!SummaryGrossOutputIO$BEA_Summary_Code == "",
+                                               c("BEA_Summary_Code", year_range)]
+  # Assign sector code to row names
   rownames(SummaryGrossOutputIO) <- SummaryGrossOutputIO[, 1]
   SummaryGrossOutputIO[, 1] <- NULL
-  # Convert values to numeric format
-  SummaryGrossOutputIO[] <- as.data.frame(apply(SummaryGrossOutputIO, 2, as.numeric))
-  
-  # Sector
-  SectorGrossOutput <- getBEASectorGrossOutput2012Schema()
-  # Attach IO industry
-  SectorGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_SectorGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                             sep = ",", header = TRUE)
-  SectorGrossOutputIO <- cbind(SectorGDPIndustrytoIO, SectorGrossOutput)
+
+  ### Sector ###
+  SectorGrossOutput <- getBEAGrossOutput(level="Sector")
+  # Map BEA Sector industry code to IO code
+  Sector_mapping <- utils::read.table(system.file("extdata",
+                                                  paste0("Crosswalk_SectorGDPIndustrytoIO", 2012, "Schema.csv"),
+                                                  package = "useeior"),
+                                      sep = ",", header = TRUE, stringsAsFactors = FALSE)
+  colnames(Sector_mapping) <- c("sector", "BEA_Sector_Code")
+  ## TODO can update crosswalk file for 2017, 2017 sector schema is same as 2012 ^^
+  SectorGrossOutputIO <- cbind(Sector_mapping, SectorGrossOutput)
   # Keep Summary rows
-  SectorGrossOutputIO <- SectorGrossOutputIO[!SectorGrossOutputIO$BEA_2012_Sector_Code == "", c("BEA_2012_Sector_Code", year_range)]
-  # Assign rownames as sector code
+  SectorGrossOutputIO <- SectorGrossOutputIO[!SectorGrossOutputIO$BEA_Sector_Code == "",
+                                             c("BEA_Sector_Code", year_range)]
+  # Assign sector code to row names
   rownames(SectorGrossOutputIO) <- SectorGrossOutputIO[, 1]
   SectorGrossOutputIO[, 1] <- NULL
-  # Convert values to numeric format
-  SectorGrossOutputIO[] <- as.data.frame(apply(SectorGrossOutputIO, 2, as.numeric))
-  
-  # Put GrossOutputIO tables in the GrossOutputIOList
-  GrossOutputIOList <- list(DetailGrossOutputIO, SummaryGrossOutputIO, SectorGrossOutputIO)
-  # Convert values from million $ to $
-  GrossOutputIOList <- lapply(GrossOutputIOList, function(x) x*1E6)
-  # Rename elements in list
-  names(GrossOutputIOList) <- c("Detail", "Summary", "Sector")
-  return(GrossOutputIOList)
+
+  ### Save and Document data
+  dfs <- list("Detail_GrossOutput_IO" = DetailGrossOutputIO,
+             "Summary_GrossOutput_IO" = SummaryGrossOutputIO,
+             "Sector_GrossOutput_IO" = SectorGrossOutputIO)
+  for (data_name in names(dfs)) {
+    writeFile(df = dfs[[data_name]], year = year_range,
+              name = data_name, ls = ls,
+              schema_year = schema_year)
+  }
 }
 
-Detail_GrossOutput_IO <- adjustBEAGrossOutputtoIOIndustry2012Schema()[["Detail"]]
-usethis::use_data(Detail_GrossOutput_IO, overwrite = TRUE)
-Summary_GrossOutput_IO <- adjustBEAGrossOutputtoIOIndustry2012Schema()[["Summary"]]
-usethis::use_data(Summary_GrossOutput_IO, overwrite = TRUE)
-Sector_GrossOutput_IO <- adjustBEAGrossOutputtoIOIndustry2012Schema()[["Sector"]]
-usethis::use_data(Sector_GrossOutput_IO, overwrite = TRUE)
-
-
-#' Get Detail BEA Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
-#'
-#' @return Detail CPI data from downloaded BEA excel file
-getBEADetailCPI2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual_Detail.xls"
-  DetailCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:422, c(2, 13:24)]
-  colnames(DetailCPI) <- c("Gross_Output_Detail_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
-  return(DetailCPI)
-}
-# Get Summary BEA Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
-getBEASummaryCPI2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SummaryCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SummaryCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
-  return(SummaryCPI)
-}
-# Get Sector BEA Chain-Type Price Indexes (CPI) (2012 schema) 2007-2017 tables from static Excel
-getBEASectorCPI2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/GrossOutputAnnual.xls"
-  SectorCPI <- readxl::read_excel(FileName, sheet = "ChainPriceIndexes")[6:197, c(2, 13:24)]
-  colnames(SectorCPI) <- c("Gross_Output_Industry", as.data.frame(readxl::read_excel(FileName, sheet = "ChainPriceIndexes"))[5, 13:24])
-  return(SectorCPI)
+#' Get Detail BEA Chain-Type Price Indexes (CPI)
+#' @param level, str "Detail", "Summary", or "Sector"
+getBEACPI <- function(level) {
+  # Download data
+  files <- getBEAUnderlyingTables()[["files"]]
+  # Prepare file name
+  file <- files[startsWith(files, "GrossOutput")]
+  FileName <- file.path(dir, "UGdpByInd", file)
+  # Load data
+  content <- na.omit(as.data.frame(readxl::read_excel(FileName,
+                                                      sheet = "Contents",
+                                                      na = "")))
+  if(level=="Detail"){
+    tag = "U.Chain-Type Price Indexes for Gross Output by Industry - Detail Level"
+  } else {
+    tag = "U.Chain-Type Price Indexes for Gross Output by Industry"
+  }
+  sheet <- paste0(content[content$Title == tag, "Code"], "-A")
+  CPI <- as.data.frame(readxl::read_excel(FileName, sheet = sheet))
+  # Trim table, assign column names
+  CPI <- CPI[!is.na(CPI[, 4]), ]
+  colnames(CPI) <- CPI[1, ]
+  sector <- CPI[-1, 2]
+  # Convert all values to numeric, assign row names
+  CPI <- cbind.data.frame(sector,
+                          lapply(CPI[-1, -c(1:3)], as.numeric))
+  return(CPI)
 }
 
-#' Adjust CPI from GDP industries to IO industries (2012 schema) at Detail, Summary, and Sector IO levels.
-#' @return A list contains IO-based CPI at Detail, Summary, and Sector IO levels.
-adjustBEACPItoIOIndustry2012Schema <- function () {
-  # Detail
-  DetailCPI <- getBEADetailCPI2012Schema()
+
+# Map CPI from GDP industries to IO industries at Detail, Summary, and Sector IO levels.
+mapBEACPItoIOIndustry <- function(schema_year) {
+  ls <- getBEAUnderlyingTables()
+  FileName <- file.path(dir, "UGdpByInd",
+                        ls[["files"]][startsWith(ls[["files"]], "GrossOutput")])
+  ls["date_last_modified"] <- as.character(as.Date(file.mtime(FileName)))
+
+  ### Detail ###
+  DetailCPI <- getBEACPI(level="Detail")
+  DetailCPI$sector <- sub("’", "'", DetailCPI$sector)
   # Determine year range
   year_range <- colnames(DetailCPI)[2:ncol(DetailCPI)]
-  # Attach BEA Detail industry code
-  DetailGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_DetailGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                             sep = ",", header = TRUE)
-  DetailCPIIO <- merge(DetailGDPIndustrytoIO, DetailCPI, by = "Gross_Output_Detail_Industry", all.y = TRUE)
-  # Convert values to numeric format
-  DetailCPIIO[, year_range] <- as.data.frame(apply(DetailCPIIO[, year_range], 2, as.numeric))
+  # Map BEA Detail industry code to IO code
+  Detail_mapping <- utils::read.table(system.file("extdata",
+                                                  "Crosswalk_DetailGDPIndustrytoIO.csv",
+                                                  package = "useeior"),
+                                      sep = ",", header = TRUE,
+                                      stringsAsFactors = FALSE,
+                                      quote = "\"")
+  Detail_mapping$Gross_Output_Detail_Industry <- sub("’", "'",
+                                                     Detail_mapping$Gross_Output_Detail_Industry)
+  Detail_mapping <- Detail_mapping[,c("Gross_Output_Detail_Industry",
+                                      paste0("BEA_", schema_year, "_Detail_Code"))]
+  colnames(Detail_mapping) <- c("sector", "BEA_Detail_Code")
+  DetailCPIIO <- merge(Detail_mapping, DetailCPI,
+                       by = "sector", all.y = TRUE)
+  if(sum(is.na(DetailCPIIO$BEA_Detail_Code)) > 0){
+    print('ERROR: missing mappings')
+    DetailCPIIO$BEA_Detail_Code[is.na(DetailCPIIO$BEA_Detail_Code)] <- "missing"
+  }
   # Adjust (weighted average) CPI based on DetailGrossOutput
   # DetailGrossOutput
-  DetailGrossOutput <- getBEADetailGrossOutput2012Schema()
-  DetailGrossOutput[, year_range] <- as.data.frame(apply(DetailGrossOutput[, year_range], 2, as.numeric))
+  DetailGrossOutput <- getBEAGrossOutput(level="Detail")
   # Merge CPI with GrossOutput
-  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "Gross_Output_Detail_Industry")
+  DetailCPIIO <- merge(DetailCPIIO, DetailGrossOutput, by = "sector")
   # Calculate weighted average of CPI
-  for (code in unique(DetailCPIIO[, "BEA_2012_Detail_Code"])) {
-    for (year in year_range) {
-      DetailCPIIO[DetailCPIIO$BEA_2012_Detail_Code == code, year] <- stats::weighted.mean(DetailCPIIO[DetailCPIIO$BEA_2012_Detail_Code == code, paste(year, "x", sep = ".")],
-                                                                                          DetailCPIIO[DetailCPIIO$BEA_2012_Detail_Code == code, paste(year, "y", sep = ".")])
+  for (code in unique(DetailCPIIO[, "BEA_Detail_Code"])) {
+    for (y in year_range) {
+      row <- DetailCPIIO$BEA_Detail_Code == code
+      DetailCPIIO[row, y] <- stats::weighted.mean(DetailCPIIO[row, paste(y, "x", sep = ".")],
+                                                  DetailCPIIO[row, paste(y, "y", sep = ".")])
     }
   }
-  # Aggregate CPI by BEA_2012_Detail_Code
-  DetailCPIIO <- stats::aggregate(DetailCPIIO[, year_range], by = list(DetailCPIIO$BEA_2012_Detail_Code), mean)
-  # Assign rownames as sector code
+  # Aggregate CPI by BEA_Detail_Code
+  DetailCPIIO <- stats::aggregate(DetailCPIIO[, year_range],
+                                  by = list(DetailCPIIO$BEA_Detail_Code),
+                                  mean)
+  # Assign sector code to row names
   rownames(DetailCPIIO) <- DetailCPIIO[, 1]
   DetailCPIIO[, 1] <- NULL
-  
-  # Summary
-  SummaryCPI <- getBEASummaryCPI2012Schema()
-  # Attach BEA Detail industry code
-  SummaryGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_SummaryGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                              sep = ",", header = TRUE)
-  SummaryCPIIO <- cbind(SummaryGDPIndustrytoIO, SummaryCPI)
+
+  ### Summary ###
+  SummaryCPI <- getBEACPI(level="Summary")
+  # Map BEA Summary industry code to IO code
+  Summary_mapping <- utils::read.table(system.file("extdata",
+                                                   paste0("Crosswalk_SummaryGDPIndustrytoIO", 2012,"Schema.csv"),
+                                                   package = "useeior"),
+                                       sep = ",", header = TRUE, stringsAsFactors = FALSE)
+  colnames(Summary_mapping) <- c("sector", "BEA_Summary_Code")
+  ## TODO can update crosswalk file for 2017, 2017 summary schema is same as 2012 ^^
+  SummaryCPIIO <- cbind(Summary_mapping, SummaryCPI)
   # Keep Summary rows
-  SummaryCPIIO <- SummaryCPIIO[!SummaryCPIIO$BEA_2012_Summary_Code == "", c("BEA_2012_Summary_Code", year_range)]
-  # Assign rownames as sector code
+  SummaryCPIIO <- SummaryCPIIO[!SummaryCPIIO$BEA_Summary_Code == "",
+                               c("BEA_Summary_Code", year_range)]
+  # Assign sector code to row names
   rownames(SummaryCPIIO) <- SummaryCPIIO[, 1]
   SummaryCPIIO[, 1] <- NULL
-  # Convert values to numeric format
-  SummaryCPIIO[] <- as.data.frame(apply(SummaryCPIIO, 2, as.numeric))
-  
-  # Sector
-  SectorCPI <- getBEASectorCPI2012Schema()
-  # Attach BEA Detail industry code
-  SectorGDPIndustrytoIO <- utils::read.table(system.file("inst/extdata", "Crosswalk_SectorGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                             sep = ",", header = TRUE)
-  SectorCPIIO <- cbind(SectorGDPIndustrytoIO, SectorCPI)
+
+  ### Sector ###
+  SectorCPI <- getBEACPI(level="Sector")
+  # Map BEA Sector industry code to IO code
+  Sector_mapping <- utils::read.table(system.file("extdata",
+                                                  paste0("Crosswalk_SectorGDPIndustrytoIO", 2012,"Schema.csv"),
+                                                  package = "useeior"),
+                                      sep = ",", header = TRUE, stringsAsFactors = FALSE)
+  colnames(Sector_mapping) <- c("sector", "BEA_Sector_Code")
+  ## TODO can update crosswalk file for 2017, 2017 sector schema is same as 2012 ^^
+  SectorCPIIO <- cbind(Sector_mapping, SectorCPI)
   # Keep Sector rows
-  SectorCPIIO <- SectorCPIIO[!SectorCPIIO$BEA_2012_Sector_Code == "", c("BEA_2012_Sector_Code", year_range)]
-  # Assign rownames as sector code
+  SectorCPIIO <- SectorCPIIO[!SectorCPIIO$BEA_Sector_Code == "",
+                             c("BEA_Sector_Code", year_range)]
+  # Assign sector code to row names
   rownames(SectorCPIIO) <- SectorCPIIO[, 1]
   SectorCPIIO[, 1] <- NULL
-  # Convert values to numeric format
-  SectorCPIIO[] <- as.data.frame(apply(SectorCPIIO, 2, as.numeric))
-  
-  # Put CPIIO tables in the CPIIOList
-  CPIIOList <- list(DetailCPIIO, SummaryCPIIO, SectorCPIIO)
-  names(CPIIOList) <- c("Detail", "Summary", "Sector")
-  return(CPIIOList)
+
+  ### Save and Document data
+  dfs <- list("Detail_CPI_IO" = DetailCPIIO,
+             "Summary_CPI_IO" = SummaryCPIIO,
+             "Sector_CPI_IO" = SectorCPIIO)
+  for (data_name in names(dfs)) {
+    writeFile(df = dfs[[data_name]], year = year_range,
+              name = data_name, ls = ls,
+              schema_year = schema_year)
+  }
 }
 
-Detail_CPI_IO <- adjustBEACPItoIOIndustry2012Schema()[["Detail"]]
-usethis::use_data(Detail_CPI_IO, overwrite = TRUE)
-Summary_CPI_IO <- adjustBEACPItoIOIndustry2012Schema()[["Summary"]]
-usethis::use_data(Summary_CPI_IO, overwrite = TRUE)
-Sector_CPI_IO <- adjustBEACPItoIOIndustry2012Schema()[["Sector"]]
-usethis::use_data(Sector_CPI_IO, overwrite = TRUE)
-
-
-#' Get Summary BEA Value Added (2012 schema) 2007-2017 tables from static Excel
-#' 
-#' @return Summary Value Added data from downloaded BEA excel file
-getBEASummaryValueAdded2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/ValueAddedAnnual.xls"
-  SummaryValueAdded <- readxl::read_excel(FileName, sheet = "VA")[6:197, c(2, 13:24)]
-  colnames(SummaryValueAdded) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "VA"))[5, 13:24])
+#' Get Summary BEA Value Added
+getBEASummaryValueAdded <- function() {
+  # Download data
+  files <- getBEAUnderlyingTables()[["files"]]
+  # Prepare file name
+  file <- files[startsWith(files, "ValueAdded")]
+  FileName <- file.path(dir, "UGdpByInd", file)
+  # Load data
+  content <- na.omit(as.data.frame(readxl::read_excel(FileName,
+                                                      sheet = "Contents",
+                                                      na = "")))
+  dataname <- "U.Value Added by Industry"
+  sheet <- paste0(content[content$Title == dataname, "Code"], "-A")
+  SummaryValueAdded <- as.data.frame(readxl::read_excel(FileName, sheet = sheet))
+  # Trim table, assign column names
+  SummaryValueAdded <- SummaryValueAdded[!is.na(SummaryValueAdded[, 4]), ]
+  colnames(SummaryValueAdded) <- SummaryValueAdded[1, ]
+  Industry <- SummaryValueAdded[-1, 2]
+  # Convert all values to numeric, assign row names
+  SummaryValueAdded <- cbind.data.frame(Industry,
+                                        lapply(SummaryValueAdded[-1, -c(1:3)],
+                                               as.numeric))
   return(SummaryValueAdded)
 }
-#' Get Sector BEA Value Added (2012 schema) 2007-2017 tables from static Excel
-#' 
-#' @return Sector Value Added data from downloaded BEA excel file
-getBEASectorValueAdded2012Schema <- function () {
-  # Download all Underlying tables from BEA iTable
-  getBEAUnderlyingTables()
-  # Load desired excel file
-  FileName <- "inst/extdata/AllTablesUnderlying/ValueAddedAnnual.xls"
-  SectorValueAdded <- readxl::read_excel(FileName, sheet = "VA")[6:197, c(2, 13:24)]
-  colnames(SectorValueAdded) <- c("Industry", as.data.frame(readxl::read_excel(FileName, sheet = "VA"))[5, 13:24])
-  return(SectorValueAdded)
-}
 
-#' Adjust Value Added ($) from GDP industries to IO industries (2012 schema) at Summary and Sector IO levels.
-#' @return A list contains IO-based Value Added at Summary and Sector IO levels.
-adjustBEAValueAddedtoIOIndustry2012Schema <- function () {
-  # Summary
-  SummaryValueAdded <- getBEASummaryValueAdded2012Schema()
+
+#' Map Value Added ($) from GDP industries to IO industries
+#' at Summary and Sector IO levels
+mapBEAValueAddedtoIOIndustry <- function(schema_year) {
+  # Download data
+  ls <- getBEAUnderlyingTables()
+  FileName <- file.path(dir, "UGdpByInd",
+                        ls[["files"]][startsWith(ls[["files"]], "ValueAdded")])
+  ls["date_last_modified"] <- as.character(as.Date(file.mtime(FileName)))
+
+  ### Summary ###
+  SummaryValueAdded <- getBEASummaryValueAdded()
   # Determine year range
   year_range <- colnames(SummaryValueAdded)[2:ncol(SummaryValueAdded)]
-  # Attach BEA Detail industry code
-  SummaryGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_SummaryGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                              sep = ",", header = TRUE)
-  SummaryValueAddedIO <- cbind(SummaryGDPIndustrytoIO, SummaryValueAdded)
+  # Map BEA Summary industry code to IO code
+  Summary_mapping <- utils::read.table(system.file("extdata",
+                                                   paste0("Crosswalk_SummaryGDPIndustrytoIO", 2012,"Schema.csv"),
+                                                   package = "useeior"),
+                                       sep = ",", header = TRUE, stringsAsFactors = FALSE)
+  colnames(Summary_mapping) <- c("Gross_Output_Industry","BEA_Summary_Code")
+  ## TODO can update crosswalk file for 2017, 2017 summary schema is same as 2012 ^^
+  SummaryValueAddedIO <- cbind(Summary_mapping, SummaryValueAdded)
   # Keep Summary rows
-  SummaryValueAddedIO <- SummaryValueAddedIO[!SummaryValueAddedIO$BEA_2012_Summary_Code == "", c("BEA_2012_Summary_Code", year_range)]
-  # Assign rownames as sector code
+  SummaryValueAddedIO <- SummaryValueAddedIO[!SummaryValueAddedIO$BEA_Summary_Code == "",
+                                             c("BEA_Summary_Code", year_range)]
+  # Assign sector code to row names
   rownames(SummaryValueAddedIO) <- SummaryValueAddedIO[, 1]
   SummaryValueAddedIO[, 1] <- NULL
-  # Convert values to numeric format
-  SummaryValueAddedIO[] <- as.data.frame(apply(SummaryValueAddedIO, 2, as.numeric))
-  
-  # Sector
-  SectorValueAdded <- getBEASectorValueAdded2012Schema()
-  # Attach BEA Detail industry code
-  SectorGDPIndustrytoIO <- utils::read.table(system.file("extdata", "Crosswalk_SectorGDPIndustrytoIO2012Schema.csv", package = "useeior"),
-                                             sep = ",", header = TRUE)
-  SectorValueAddedIO <- cbind(SectorGDPIndustrytoIO, SectorValueAdded)
+
+  ### Sector ###
+  SectorValueAdded <- getBEASummaryValueAdded()
+  # Map BEA Sector industry code to IO code
+  Sector_mapping <- utils::read.table(system.file("extdata",
+                                                  paste0("Crosswalk_SectorGDPIndustrytoIO", 2012,"Schema.csv"),
+                                                  package = "useeior"),
+                                      sep = ",", header = TRUE, stringsAsFactors = FALSE)
+  colnames(Sector_mapping) <- c("Gross_Output_Industry","BEA_Sector_Code")
+  ## TODO can update crosswalk file for 2017, 2017 sector schema is same as 2012 ^^
+  SectorValueAddedIO <- cbind(Sector_mapping, SectorValueAdded)
   # Keep Sector rows
-  SectorValueAddedIO <- SectorValueAddedIO[!SectorValueAddedIO$BEA_2012_Sector_Code == "", c("BEA_2012_Sector_Code", year_range)]
-  # Assign rownames as sector code
+  SectorValueAddedIO <- SectorValueAddedIO[!SectorValueAddedIO$BEA_Sector_Code == "",
+                                           c("BEA_Sector_Code", year_range)]
+  # Assign sector code to row names
   rownames(SectorValueAddedIO) <- SectorValueAddedIO[, 1]
   SectorValueAddedIO[, 1] <- NULL
-  # Convert values to numeric format
-  SectorValueAddedIO[] <- as.data.frame(apply(SectorValueAddedIO, 2, as.numeric))
-  
-  # Put ValueAddedIO tables in the ValueAddedIOList
-  ValueAddedIOList <- list(SummaryValueAddedIO, SectorValueAddedIO)
-  # Convert values from million $ to $
-  ValueAddedIOList <- lapply(ValueAddedIOList, function(x) x*1E6)
-  # Rename elements in list
-  names(ValueAddedIOList) <- c("Summary", "Sector")
-  return(ValueAddedIOList)
+
+  ### Save and Document data
+  dfs <- list("Summary_ValueAdded_IO" = SummaryValueAddedIO,
+             "Sector_ValueAdded_IO" = SectorValueAddedIO)
+  for (data_name in names(dfs)) {
+    writeFile(df = dfs[[data_name]], year = year_range,
+              name = data_name, ls = ls,
+              schema_year = schema_year)
+  }
 }
 
-Summary_ValueAdded_IO <- adjustBEAValueAddedtoIOIndustry2012Schema()[["Summary"]]
-usethis::use_data(Summary_ValueAdded_IO, overwrite = TRUE)
-Sector_ValueAdded_IO <- adjustBEAValueAddedtoIOIndustry2012Schema()[["Sector"]]
-usethis::use_data(Sector_ValueAdded_IO, overwrite = TRUE)
+#'Applies string functions to clean BEA codes in a df
+#'@param df, a sector dataframe with codes in col 1
+#'@return df, the same df with cleaned codes
+cleanSectorCodes <- function(df) {
+  codes <- df[,1]
+  codes <- removeExtraSpaces(codes)
+  df[,1] <- codes
+  return(df)
+}
 
+#'Applies string functions to clean BEA names in a df
+#'@param df, a sector dataframe with sector names in col 2
+#'@return df, the same df with cleaned names
+cleanSectorNames <- function(df) {
+  sec_names <- df[,2]
+  sec_names <- removeNumberinSlashes(sec_names)
+  sec_names <- convertStrEncodingLatintoASCII(sec_names)
+  df[,2] <- sec_names
+  return(df)
+}
 
-# Get BEA (Detail/Summary/Sector) Code and Name under 2012 schema
-getBEACodeName2012Schema <- function () {
-  ### Download all IO tables from BEA iTable
-  getBEAIOTables()
-  ### Load desired excel file
-  ## Detail
-  BEADetail <- as.data.frame(readxl::read_excel("inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_2007_2012_Detail.xlsx", sheet = "2012"))
-  # Industry
-  BEADetailIndustryCodeName <- BEADetail[6:410, 1:2]
-  colnames(BEADetailIndustryCodeName) <- c("BEA_2012_Detail_Industry_Code", "BEA_2012_Detail_Industry_Name")
-  rownames(BEADetailIndustryCodeName) <- NULL
+# Get BEA (Detail/Summary/Sector) Code and Name
+getBEACodeName <- function(schema_year) {
+  # Download data
+  # Get the data from AllTablesIO
+  url <- getBEAIOTables()[["url"]]
+  date_accessed <- getBEAIOTables()[["date_accessed"]]
+  files <- getBEAIOTables()[["files"]]
+  FileName <- file.path(dir, "AllTableIO",
+                        files[startsWith(files, "IOUse_Before_Redefinitions_PRO") &
+                        endsWith(files, "Detail.xlsx")])
+
+  # Get the data from AllTablesSUP
+  # url <- getBEASupplyUseTables()[["url"]]
+  # date_accessed <- getBEASupplyUseTables()[["date_accessed"]]
+  # files <- getBEASupplyUseTables()[["files"]]
+  # FileName <- file.path(dir, "AllTablesSUP",
+  #                       files[startsWith(files, paste0("Use_SUT_Framework_",schema_year,"_DET.xlsx"))])  
+
+  date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+
+  ### Detail ###
+  # Load data
+  BEADetail <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(schema_year)))
+  ## Commodity & Value Added
+  DetailCommVA <- BEADetail[!is.na(BEADetail[, 2]), c(1:2)][-1, ]
+  commodity_range <- c(1:(which(DetailCommVA[, 1] == "T005") - 1))
+  # value added range in MUT Use table
+  va_range <- c((length(commodity_range) + 2):(which(DetailCommVA[, 1] == "T006") - 1))
+  # Value added range from SUT
+  # va_range <- c((length(commodity_range) + 2):(which(DetailCommVA[, 1] == "VABAS") - 1))
+  # va_range <- append(va_range,c((max(va_range) + 3):(which(DetailCommVA[, 1] == "VAPRO") - 1)))
+  
   # Commodity
-  BEADetailCommodityCodeName <- as.data.frame(t(BEADetail[5:4, 3:407]), stringsAsFactors = FALSE)
-  colnames(BEADetailCommodityCodeName) <- c("BEA_2012_Detail_Commodity_Code", "BEA_2012_Detail_Commodity_Name")
+  BEADetailCommodityCodeName <- DetailCommVA[commodity_range, ]
+  colnames(BEADetailCommodityCodeName) <- c(paste0("BEA_",schema_year,"_Detail_Commodity_Code"),
+                                            paste0("BEA_",schema_year,"_Detail_Commodity_Name"))
   rownames(BEADetailCommodityCodeName) <- NULL
-  ## Summary
-  BEASummary <- as.data.frame(readxl::read_excel("inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_1997-2018_Summary.xlsx", sheet = "2012"))
+  # Value Added
+  BEADetailValueAddedCodeName <- DetailCommVA[va_range, ]
+  colnames(BEADetailValueAddedCodeName) <- c(paste0("BEA_",schema_year,"_Detail_ValueAdded_Code"),
+                                             paste0("BEA_",schema_year,"_Detail_ValueAdded_Name"))
+  rownames(BEADetailValueAddedCodeName) <- NULL
+  ## Industry & Final Demand
+  DetailIndFD <- as.data.frame(t(BEADetail[!is.na(BEADetail[, 3]), ][2:1, -c(1:2)]))
+  industry_range <- c(1:(which(DetailIndFD[, 1] == "T001") - 1))
+  
+  # FD range from MUT Use
+  fd_range <- c((length(industry_range) + 2):(which(DetailIndFD[, 2] == "Total Final Uses (GDP)") - 1))
+
+  # FD range from SUT Use
+  # fd_range <- c((length(industry_range) + 2):(which(DetailIndFD[, 1] == "T019") - 1))
+  
   # Industry
-  BEASummaryIndustryCodeName <- BEASummary[7:77, 1:2]
-  colnames(BEASummaryIndustryCodeName) <- c("BEA_2012_Summary_Industry_Code", "BEA_2012_Summary_Industry_Name")
-  rownames(BEASummaryIndustryCodeName) <- NULL
+  BEADetailIndustryCodeName <- DetailIndFD[industry_range, ]
+  colnames(BEADetailIndustryCodeName) <- c(paste0("BEA_",schema_year,"_Detail_Industry_Code"),
+                                           paste0("BEA_",schema_year,"_Detail_Industry_Name"))
+  rownames(BEADetailIndustryCodeName) <- NULL
+  # Final Demand
+  BEADetailFinalDemandCodeName <-  DetailIndFD[fd_range, ]
+  colnames(BEADetailFinalDemandCodeName) <- c(paste0("BEA_",schema_year,"_Detail_FinalDemand_Code"),
+                                              paste0("BEA_",schema_year,"_Detail_FinalDemand_Name"))
+  rownames(BEADetailFinalDemandCodeName) <- NULL
+
+  ### Summary ###
+  # Load data
+  FileName <- file.path(dir, "AllTableIO",
+                        files[startsWith(files, "IOUse_Before_Redefinitions_PRO") &
+                              endsWith(files, "Summary.xlsx")])
+  # FileName <- file.path(dir, "AllTablesSUP",
+  #                       files[startsWith(files, "Use_Tables") &
+  #                               endsWith(files, "Summary.xlsx")])
+  
+  date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+  BEASummary <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(schema_year)))
+  ## Commodity & Value Added
+  SummaryCommVA <- BEASummary[!is.na(BEASummary[, 2]), c(1:2)][-c(1:2), ]
+  commodity_range <- c(1:(which(SummaryCommVA[, 2] == "Total Intermediate") - 1))
+  va_range <- c((length(commodity_range) + 2):(which(SummaryCommVA[, 2] == "Total Value Added") - 1))
   # Commodity
-  BEASummaryCommodityCodeName <- as.data.frame(t(BEASummary[5:6, 3:75]), stringsAsFactors = FALSE)
-  colnames(BEASummaryCommodityCodeName) <- c("BEA_2012_Summary_Commodity_Code", "BEA_2012_Summary_Commodity_Name")
+  BEASummaryCommodityCodeName <- SummaryCommVA[commodity_range, ]
+  colnames(BEASummaryCommodityCodeName) <- c(paste0("BEA_",schema_year, "_Summary_Commodity_Code"),
+                                             paste0("BEA_",schema_year, "_Summary_Commodity_Name"))
   rownames(BEASummaryCommodityCodeName) <- NULL
-  BEASummaryCommodityCodeName$BEA_2012_Summary_Commodity_Name <- gsub(" /.*", "", BEASummaryCommodityCodeName$BEA_2012_Summary_Commodity_Name)
-  ## Sector
-  BEASector <- as.data.frame(readxl::read_excel("inst/extdata/AllTablesIO/IOMake_Before_Redefinitions_1997-2018_Sector.xlsx", sheet = "2012"))
+  # Value Added
+  BEASummaryValueAddedCodeName <- SummaryCommVA[va_range, ]
+  colnames(BEASummaryValueAddedCodeName) <- c(paste0("BEA_",schema_year, "_Summary_ValueAdded_Code"),
+                                              paste0("BEA_",schema_year, "_Summary_ValueAdded_Name"))
+  rownames(BEASummaryValueAddedCodeName) <- NULL
+  ## Industry & Final Demand
+  SummaryIndFD <- as.data.frame(t(BEASummary[!is.na(BEASummary[, 3]), ][1:2, -c(1:2)]))
+  industry_range <- c(1:(which(SummaryIndFD[, 2] == "Total Intermediate") - 1))
+  fd_range <- c((length(industry_range) + 2):(which(SummaryIndFD[, 2] == "Total Final Uses (GDP)") - 1))
   # Industry
-  BEASectorIndustryCodeName <- BEASector[7:21, 1:2]
-  colnames(BEASectorIndustryCodeName) <- c("BEA_2012_Sector_Industry_Code", "BEA_2012_Sector_Industry_Name")
-  BEASectorIndustryCodeName$BEA_2012_Sector_Industry_Code <- gsub("\\s", "", BEASectorIndustryCodeName$BEA_2012_Sector_Industry_Code)
-  rownames(BEASectorIndustryCodeName) <- NULL
+  BEASummaryIndustryCodeName <- SummaryIndFD[industry_range, ]
+  colnames(BEASummaryIndustryCodeName) <- c(paste0("BEA_",schema_year, "_Summary_Industry_Code"),
+                                            paste0("BEA_",schema_year, "_Summary_Industry_Name"))
+  rownames(BEASummaryIndustryCodeName) <- NULL
+  # Final Demand
+  BEASummaryFinalDemandCodeName <-  SummaryIndFD[fd_range, ]
+  colnames(BEASummaryFinalDemandCodeName) <- c(paste0("BEA_",schema_year, "_Summary_FinalDemand_Code"),
+                                               paste0("BEA_",schema_year, "_Summary_FinalDemand_Name"))
+  rownames(BEASummaryFinalDemandCodeName) <- NULL
+
+  ### Sector ###
+  # Load data
+  FileName <- file.path(dir, "AllTableIO",
+                        files[startsWith(files, "IOUse_Before_Redefinitions_PRO") &
+                              endsWith(files, "Sector.xlsx")])
+  date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+  BEASector <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(schema_year)))
+  ## Commodity & Value Added
+  SectorCommVA <- BEASector[!is.na(BEASector[, 2]), c(1:2)][-c(1:2), ]
+  commodity_range <- c(1:(which(SectorCommVA[, 2] == "Total Intermediate") - 1))
+  va_range <- c((length(commodity_range) + 2):(which(SectorCommVA[, 2] == "Total Value Added") - 1))
   # Commodity
-  BEASectorCommodityCodeName <- as.data.frame(t(BEASector[5:6, 3:19]), stringsAsFactors = FALSE)
-  colnames(BEASectorCommodityCodeName) <- c("BEA_2012_Sector_Commodity_Code", "BEA_2012_Sector_Commodity_Name")
+  BEASectorCommodityCodeName <- SectorCommVA[commodity_range, ]
+  colnames(BEASectorCommodityCodeName) <- c(paste0("BEA_",schema_year, "_Sector_Commodity_Code"),
+                                            paste0("BEA_",schema_year, "_Sector_Commodity_Name"))
   rownames(BEASectorCommodityCodeName) <- NULL
-  BEASectorCommodityCodeName$BEA_2012_Sector_Commodity_Name <- gsub(" /.*", "", BEASectorCommodityCodeName$BEA_2012_Sector_Commodity_Name)
+  # Value Added
+  BEASectorValueAddedCodeName <- SectorCommVA[va_range, ]
+  colnames(BEASectorValueAddedCodeName) <- c(paste0("BEA_",schema_year, "_Sector_ValueAdded_Code"),
+                                             paste0("BEA_",schema_year, "_Sector_ValueAdded_Name"))
+  rownames(BEASectorValueAddedCodeName) <- NULL
+  ## Industry & Final Demand
+  SectorIndFD <- as.data.frame(t(BEASector[!is.na(BEASector[, 3]), ][1:2, -c(1:2)]))
+  industry_range <- c(1:(which(SectorIndFD[, 2] == "Total Intermediate") - 1))
+  fd_range <- c((length(industry_range) + 2):(which(SectorIndFD[, 2] == "Total Final Uses (GDP)") - 1))
+  # Industry
+  BEASectorIndustryCodeName <- SectorIndFD[industry_range, ]
+  colnames(BEASectorIndustryCodeName) <- c(paste0("BEA_",schema_year, "_Sector_Industry_Code"),
+                                           paste0("BEA_",schema_year, "_Sector_Industry_Name"))
+  rownames(BEASectorIndustryCodeName) <- NULL
+  # Final Demand
+  BEASectorFinalDemandCodeName <-  SectorIndFD[fd_range, ]
+  colnames(BEASectorFinalDemandCodeName) <- c(paste0("BEA_",schema_year, "_Sector_FinalDemand_Code"),
+                                              paste0("BEA_",schema_year, "_Sector_FinalDemand_Name"))
+  rownames(BEASectorFinalDemandCodeName) <- NULL
+
   ### Put the data.frames in a list
-  BEACodeNameList <- list(BEADetailIndustryCodeName, BEADetailCommodityCodeName,
-                          BEASummaryIndustryCodeName, BEASummaryCommodityCodeName,
-                          BEASectorIndustryCodeName, BEASectorCommodityCodeName)
-  names(BEACodeNameList) <- c("DetailIndustry", "DetailCommodity", "SummaryIndustry", "SummaryCommodity", "SectorIndustry", "SectorCommodity")
-  return(BEACodeNameList)
-}
-
-Detail_IndustryCodeName_2012 <- getBEACodeName2012Schema()[["DetailIndustry"]]
-usethis::use_data(Detail_IndustryCodeName_2012, overwrite = TRUE)
-Detail_CommodityCodeName_2012 <- getBEACodeName2012Schema()[["DetailCommodity"]]
-usethis::use_data(Detail_CommodityCodeName_2012, overwrite = TRUE)
-Summary_IndustryCodeName_2012 <- getBEACodeName2012Schema()[["SummaryIndustry"]]
-usethis::use_data(Summary_IndustryCodeName_2012, overwrite = TRUE)
-Summary_CommodityCodeName_2012 <- getBEACodeName2012Schema()[["SummaryCommodity"]]
-usethis::use_data(Summary_CommodityCodeName_2012, overwrite = TRUE)
-Sector_IndustryCodeName_2012 <- getBEACodeName2012Schema()[["SectorIndustry"]]
-usethis::use_data(Sector_IndustryCodeName_2012, overwrite = TRUE)
-Sector_CommodityCodeName_2012 <- getBEACodeName2012Schema()[["SectorCommodity"]]
-usethis::use_data(Sector_CommodityCodeName_2012, overwrite = TRUE)
-
-# Get PCE Bridge (2012 schema) 2007 and 2012 tables from BEA static URL
-getBEADetailPCEBridge2012Schema <- function () {
-  # Download BEA PCE bridge table
-  if(!file.exists("inst/extdata/PCEBridge_2007_2012_DET.xlsx")) {
-    utils::download.file("https://apps.bea.gov/industry/xls/underlying-estimates/PCEBridge_2007_2012_DET.xlsx",
-                  "inst/extdata/PCEBridge_2007_2012_DET.xlsx", mode = "wb")
+  BEACodeNameList <- list("Detail_IndustryCodeName"     = BEADetailIndustryCodeName,
+                          "Detail_CommodityCodeName"    = BEADetailCommodityCodeName,
+                          "Detail_ValueAddedCodeName"   = BEADetailValueAddedCodeName,
+                          "Detail_FinalDemandCodeName"  = BEADetailFinalDemandCodeName,
+                          "Summary_IndustryCodeName"    = BEASummaryIndustryCodeName,
+                          "Summary_CommodityCodeName"   = BEASummaryCommodityCodeName,
+                          "Summary_ValueAddedCodeName"  = BEASummaryValueAddedCodeName,
+                          "Summary_FinalDemandCodeName" = BEASummaryFinalDemandCodeName,
+                          "Sector_IndustryCodeName"     = BEASectorIndustryCodeName,
+                          "Sector_CommodityCodeName"    = BEASectorCommodityCodeName,
+                          "Sector_ValueAddedCodeName"   = BEASectorValueAddedCodeName,
+                          "Sector_FinalDemandCodeName"  = BEASectorFinalDemandCodeName)
+  BEACodeNameList <- lapply(BEACodeNameList, cleanSectorNames)
+  BEACodeNameList <- lapply(BEACodeNameList, cleanSectorCodes)
+  ### Save and Document data
+  ls <- list("url" = url,
+             "date_last_modified" = date_last_modified,
+             "date_accessed" = date_accessed)
+  for (data_name in names(BEACodeNameList)) {
+    writeFile(df = BEACodeNameList[[data_name]], year = schema_year,
+              name = paste0(data_name, "_", schema_year), ls = ls,
+              schema_year = NULL)
   }
-  column_names <- c("NIPACode", "PCECategory", "CommodityCode", "CommodityDescription",
-                    "ProducersValue", "Transportation", "Wholesale", "Retail", "PurchasersValue")
-  # 2012 data
-  PCEBridge2012 <- as.data.frame(readxl::read_excel("inst/extdata/PCEBridge_2007_2012_DET.xlsx", sheet = "2012"))[6:717, c(1:9)]
-  colnames(PCEBridge2012) <- column_names
-  # Convert PCE values from character to numeric
-  PCEBridge2012[, column_names[5:9]] <- as.data.frame(apply(PCEBridge2012[, column_names[5:9]], 2, as.numeric))
-  # 2007 data
-  PCEBridge2007 <- as.data.frame(readxl::read_excel("inst/extdata/PCEBridge_2007_2012_DET.xlsx", sheet = "2007"))[6:717, c(1:9)]
-  colnames(PCEBridge2007) <- column_names
-  # Convert PCE values from character to numeric
-  PCEBridge2007[, column_names[5:9]] <- as.data.frame(apply(PCEBridge2007[, column_names[5:9]], 2, as.numeric))
-
-  # PutPCEBridge2012 and PCEBridge2007 in the PCEBridge2012SchemaList
-  PCEBridge2012SchemaList <- list(PCEBridge2007, PCEBridge2012)
-  names(PCEBridge2012SchemaList) <- c("2007", "2012")
-  return(PCEBridge2012SchemaList)
 }
-Detail_PCE_2012 <- getBEADetailPCEBridge2012Schema()[["2012"]]
-usethis::use_data(Detail_PCE_2012, overwrite = TRUE)
 
-# Get DetailPEQ Bridge (2012 schema) 2007 and 2012 tables from BEA static URL
-getBEADetailPEQBridge2012Schema <- function () {
-  # Download BEA PEQ bridge table
-  if(!file.exists("inst/extdata/PEQBridge_2007_2012_DET.xlsx")) {
-    utils::download.file("https://apps.bea.gov/industry/xls/underlying-estimates/PEQBridge_2007_2012_DET.xlsx",
-                  "inst/extdata/PEQBridge_2007_2012_DET.xlsx", mode = "wb")
+# Get Detail Margins (Before Redefinition) table from BEA static URL
+getBEADetailMarginsBeforeRedef <- function(year) {
+  # Download data
+  file <- "Margins_Before_Redefinitions_2017_DET.xlsx"
+  url <- file.path(url_ls["margins"], file)
+  FileName <- file.path(dir, file)
+  if (!file.exists(FileName)) {
+    utils::download.file(url, FileName, mode = "wb")
   }
-  column_names <- c("NIPACode", "PEQCategory", "CommodityCode", "CommodityDescription",
-                    "ProducersValue", "Transportation", "Wholesale", "Retail", "PurchasersValue")
-  # 2012 data
-  PEQBridge2012 <- as.data.frame(readxl::read_excel("inst/extdata/PEQBridge_2007_2012_DET.xlsx", sheet = "2012"))[6:190, c(1:9)]
-  colnames(PEQBridge2012) <-column_names
-  # Convert PEQ values from character to numeric
-  PEQBridge2012[, column_names[5:9]] <- as.data.frame(apply(PEQBridge2012[, column_names[5:9]], 2, as.numeric))
-  # 2007 data
-  PEQBridge2007 <- as.data.frame(readxl::read_excel("inst/extdata/PEQBridge_2007_2012_DET.xlsx", sheet = "2007"))[6:190, c(1:9)]
-  colnames(PEQBridge2007) <- column_names
-  # Convert PEQ values from character to numeric
-  PEQBridge2007[, column_names[5:9]] <- as.data.frame(apply(PEQBridge2007[, column_names[5:9]], 2, as.numeric))
-
-  # PutPEQBridge2012 and PEQBridge2007 in the PEQBridge2012SchemaList
-  PEQBridge2012SchemaList <- list(PEQBridge2007, PEQBridge2012)
-  names(PEQBridge2012SchemaList) <- c("2007", "2012")
-  return(PEQBridge2012SchemaList)
+  # Load data
+  Margins <- as.data.frame(readxl::read_excel(FileName, sheet = as.character(year)))
+  # Trim table, assign column names
+  Margins <- Margins[!is.na(Margins[, 4]), ][-1, ]
+  rownames(Margins) <- NULL
+  colnames(Margins) <- c("NIPACode", "MarginsCategory",
+                         "CommodityCode", "CommodityDescription",
+                         "ProducersValue", "Transportation",
+                         "Wholesale", "Retail", "PurchasersValue")
+  # Convert all values to numeric, assign row names
+  Margins[, 5:ncol(Margins)] <- as.data.frame(lapply(Margins[, 5:ncol(Margins)],
+                                                     as.numeric),
+                                              check.names = FALSE)
+  ls <- list("url" = url,
+             "date_accessed" = as.character(as.Date(file.mtime(FileName))),
+             "date_last_modified" = "2024-02-01") # page last modified 
+  writeFile(df = Margins, year = year,
+            name = paste0("Detail_Margins_", year, "_BeforeRedef"), ls = ls,
+            schema_year = year)
 }
-Detail_PEQ_2012 <- getBEADetailPEQBridge2012Schema()[["2012"]]
-usethis::use_data(Detail_PEQ_2012, overwrite = TRUE)
 
-# Get Detail Margins (Before Redef, 2012 schema) 2007 and 2012 tables from BEA static URL
-getBEADetailMarginsBeforeRedef2012Schema <- function () {
-  # Download BEA PCE bridge table
-  if(!file.exists("inst/extdata/Margins_Before_Redefinitions_2007_2012_DET.xlsx")) {
-    utils::download.file("https://apps.bea.gov/industry/xls/underlying-estimates/Margins_Before_Redefinitions_2007_2012_DET.xlsx",
-                  "inst/extdata/Margins_Before_Redefinitions_2007_2012_DET.xlsx", mode = "wb")
+
+# Get BEA Detail Supply table from static Excel
+getBEADetailSupply <- function(year) {
+  ls <- getBEASupplyUseTables()
+  FileName <- file.path(dir, "AllTablesSUP",
+                        ls[["files"]][startsWith(ls[["files"]], "Supply") &
+                                      endsWith(ls[["files"]], "DET.xlsx")])
+  ls["date_last_modified"] <- "2024-02-01" # page last modified 
+  DetailSupply <- as.data.frame(readxl::read_excel(FileName,
+                                                   sheet = as.character(year)))
+  DetailSupply <- processDetailMatrix(DetailSupply)
+  writeFile(df = DetailSupply, year = year,
+            name = paste0("Detail_Supply_", year), ls = ls,
+            schema_year = year)
+}
+
+
+# Get BEA Detail Use (under the Supply-Use framework schema) table from static Excel
+getBEADetailUseSUT <- function(year) {
+  ls <- getBEASupplyUseTables()
+  FileName <- file.path(dir, "AllTablesSUP",
+                        ls[["files"]][startsWith(ls[["files"]], "Use") &
+                                        endsWith(ls[["files"]], "DET.xlsx")])
+  ls["date_last_modified"] = "2024-02-01" # page last modified 
+  DetailUse <- as.data.frame(readxl::read_excel(FileName,
+                                                   sheet = as.character(year)))
+  DetailUse <- processDetailMatrix(DetailUse)
+  writeFile(df = DetailUse, year = year,
+            name = paste0("Detail_Use_SUT_", year), ls = ls,
+            schema_year = year)
+}
+
+
+# Get BEA Summary Supply table from static Excel
+getBEASummarySupply <- function(year) {
+  ls <- getBEASupplyUseTables()
+  # Prepare file name
+  file <- ls[["files"]][startsWith(ls[["files"]], "Supply") & 
+                          endsWith(ls[["files"]], "Summary.xlsx")]
+  FileName <- file.path(dir, "AllTablesSUP", file)
+  end_year <- 2022
+  # Load data
+  for (y in 2017:end_year) {
+    SummarySupply <- as.data.frame(readxl::read_excel(FileName,
+                                                      sheet = as.character(y)))
+    SummarySupply <- processSummaryMatrix(SummarySupply)
+    writeFile(df = SummarySupply, year = y,
+              name = paste0("Summary_Supply_", y), ls = ls,
+              schema_year = year)
   }
-  column_names <- c("NIPACode", "MarginsCategory", "CommodityCode", "CommodityDescription",
-                    "ProducersValue", "Transportation", "Wholesale", "Retail", "PurchasersValue")
-  # 2012 data
-  Margins2012 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_DET.xlsx", sheet = "2012"))[5:61848, ]
-  colnames(Margins2012) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2012[, column_names[5:9]] <- as.data.frame(apply(Margins2012[, column_names[5:9]], 2, as.numeric))
-  # 2007 data
-  Margins2007 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_DET.xlsx", sheet = "2007"))[5:61844, ]
-  colnames(Margins2007) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2007[, column_names[5:9]] <- as.data.frame(apply(Margins2007[, column_names[5:9]], 2, as.numeric))
-  
-  # Put Margins2012 and Margins2007 in the Margins2012SchemaList
-  Margins2012SchemaList <- list(Margins2007, Margins2012)
-  names(Margins2012SchemaList) <- c("2007", "2012")
-  return(Margins2012SchemaList)
 }
-Detail_Margins_2012_BeforeRedef <- getBEADetailMarginsBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Detail_Margins_2012_BeforeRedef, overwrite = TRUE)
 
-# Get Summary Margins (Before Redef, 2012 schema) 2007 and 2012 tables from BEA static URL
-getBEASummaryMarginsBeforeRedef2012Schema <- function () {
-  # Download BEA PCE bridge table
-  if(!file.exists("inst/extdata/Margins_Before_Redefinitions_2007_2012_SUM.xlsx")) {
-    utils::download.file("https://apps.bea.gov/industry/xls/underlying-estimates/Margins_Before_Redefinitions_2007_2012_SUM.xlsx",
-                  "inst/extdata/Margins_Before_Redefinitions_2007_2012_SUM.xlsx", mode = "wb")
+# Get BEA Summary Use under the Supply-Use framework from static Excel
+getBEASummaryUseSUT <- function(year) {
+  ls <- getBEASupplyUseTables()
+  file <- ls[["files"]][startsWith(ls[["files"]], "Use") &
+                          endsWith(ls[["files"]], "Summary.xlsx")]
+  FileName <- file.path(dir, "AllTablesSUP", file)
+  end_year <- 2022
+  # Load data
+  for (y in 2017:end_year) {
+    SummaryUse <- as.data.frame(readxl::read_excel(FileName,
+                                                   sheet = as.character(year)))
+    SummaryUse <- processSummaryMatrix(SummaryUse)
+    writeFile(df = SummaryUse, year = y,
+              name = paste0("Summary_Use_SUT_", y), ls = ls,
+              schema_year = year)
   }
-  column_names <- c("NIPACode", "MarginsCategory", "CommodityCode", "CommodityDescription",
-                    "ProducersValue", "Transportation", "Wholesale", "Retail", "PurchasersValue")
-  # 2012 data
-  Margins2012 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_SUM.xlsx", sheet = "2012"))[5:4630, ]
-  colnames(Margins2012) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2012[, column_names[5:9]] <- as.data.frame(apply(Margins2012[, column_names[5:9]], 2, as.numeric))
-  # 2007 data
-  Margins2007 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_SUM.xlsx", sheet = "2007"))[5:4634, ]
-  colnames(Margins2007) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2007[, column_names[5:9]] <- as.data.frame(apply(Margins2007[, column_names[5:9]], 2, as.numeric))
-  
-  # Put Margins2012 and Margins2007 in the Margins2012SchemaList
-  Margins2012SchemaList <- list(Margins2007, Margins2012)
-  names(Margins2012SchemaList) <- c("2007", "2012")
-  return(Margins2012SchemaList)
 }
-Summary_Margins_2012_BeforeRedef <- getBEASummaryMarginsBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Summary_Margins_2012_BeforeRedef, overwrite = TRUE)
 
-# Get Sector Margins (Before Redef, 2012 schema) 2007 and 2012 tables from BEA static URL
-getBEASectorMarginsBeforeRedef2012Schema <- function () {
-  # Download BEA PCE bridge table
-  if(!file.exists("inst/extdata/Margins_Before_Redefinitions_2007_2012_SECT.xlsx")) {
-    utils::download.file("https://apps.bea.gov/industry/xls/underlying-estimates/Margins_Before_Redefinitions_2007_2012_SECT.xlsx",
-                  "inst/extdata/Margins_Before_Redefinitions_2007_2012_SECT.xlsx", mode = "wb")
-  }
-  column_names <- c("NIPACode", "MarginsCategory", "CommodityCode", "CommodityDescription",
-                    "ProducersValue", "Transportation", "Wholesale", "Retail", "PurchasersValue")
-  # 2012 data
-  Margins2012 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_SECT.xlsx", sheet = "2012"))[5:377, ]
-  colnames(Margins2012) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2012[, column_names[5:9]] <- as.data.frame(apply(Margins2012[, column_names[5:9]], 2, as.numeric))
-  # 2007 data
-  Margins2007 <- as.data.frame(readxl::read_excel("inst/extdata/Margins_Before_Redefinitions_2007_2012_SECT.xlsx", sheet = "2007"))[5:377, ]
-  colnames(Margins2007) <- column_names
-  # Convert Margins values from character to numeric
-  Margins2007[, column_names[5:9]] <- as.data.frame(apply(Margins2007[, column_names[5:9]], 2, as.numeric))
-  
-  # Put Margins2012 and Margins2007 in the Margins2012SchemaList
-  Margins2012SchemaList <- list(Margins2007, Margins2012)
-  names(Margins2012SchemaList) <- c("2007", "2012")
-  return(Margins2012SchemaList)
-}
-Sector_Margins_2012_BeforeRedef <- getBEASectorMarginsBeforeRedef2012Schema()[["2012"]]
-usethis::use_data(Sector_Margins_2012_BeforeRedef, overwrite = TRUE)
+
+# # Get BEA Sector Supply table from static Excel
+# getBEASectorSupply <- function() {
+#   # Download data
+#   url <- getBEASupplyUseTables()[["url"]]
+#   date_accessed <- getBEASupplyUseTables()[["date_accessed"]]
+#   files <- getBEASupplyUseTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "Supply") & endsWith(files, "SEC.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesSUP", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   # Load data
+#   for (year in 2010:end_year) {
+#     SectorSupply <- as.data.frame(readxl::read_excel(FileName,
+#                                                      sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorSupply <- SectorSupply[!is.na(SectorSupply[, 2]), ]
+#     colnames(SectorSupply) <- SectorSupply[1, ]
+#     colname_check <- is.na(colnames(SectorSupply))
+#     colnames(SectorSupply)[colname_check] <- SectorSupply[2, colname_check]
+#     # Assign T017 to Total industry supply if not provided
+#     if (is.na(SectorSupply[SectorSupply$`Commodities/Industries` == "Total industry supply", 1])) {
+#       SectorSupply[SectorSupply$`Commodities/Industries` == "Total industry supply", 1] <- "T017"
+#     }
+#     # Fill NA in code column with corresponding name
+#     SectorSupply[is.na(SectorSupply[, 1]), 1] <- SectorSupply[is.na(SectorSupply[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorSupply <- as.data.frame(lapply(SectorSupply[-c(1:2), -c(1:2)], as.numeric),
+#                                   check.names = FALSE,
+#                                   row.names = SectorSupply[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorSupply[is.na(SectorSupply)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorSupply,
+#                    data_name = paste0("Sector_Supply_", year))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Supply_", year),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+# 
+# 
+# # Get BEA Sector Use (under the Supply-Use framework, 2012 schema) table from static Excel
+# getBEASectorUseSUT2012Schema <- function() {
+#   # Download data
+#   url <- getBEASupplyUseTables()[["url"]]
+#   date_accessed <- getBEASupplyUseTables()[["date_accessed"]]
+#   files <- getBEASupplyUseTables()[["files"]]
+#   # Prepare file name
+#   file <- files[startsWith(files, "Use") & endsWith(files, "SECT.xlsx")]
+#   FileName <- file.path("inst/extdata/AllTablesSUP", file)
+#   date_last_modified <- as.character(as.Date(file.mtime(FileName)))
+#   # Find latest data year
+#   file_split <- unlist(stringr::str_split(file, pattern = "_"))
+#   year_range <- file_split[length(file_split) - 1]
+#   end_year <- sub(".*-", "", year_range)
+#   # Load data
+#   for (year in 2010:end_year) {
+#     SectorUse <- as.data.frame(readxl::read_excel(FileName,
+#                                                   sheet = as.character(year)))
+#     # Trim table, assign column names
+#     SectorUse <- SectorUse[!is.na(SectorUse[, 2]), ]
+#     colnames(SectorUse) <- SectorUse[1, ]
+#     colname_check <- is.na(colnames(SectorUse))
+#     colnames(SectorUse)[colname_check] <- SectorUse[2, colname_check]
+#     # Fill NA in code column with corresponding name
+#     SectorUse[is.na(SectorUse[, 1]), 1] <- SectorUse[is.na(SectorUse[, 1]), 2]
+#     # Convert all values to numeric, assign row names
+#     SectorUse <- as.data.frame(lapply(SectorUse[-c(1:2), -c(1:2)], as.numeric),
+#                                check.names = FALSE,
+#                                row.names = SectorUse[-c(1:2), 1])
+#     # Replace NA with zero
+#     SectorUse[is.na(SectorUse)] <- 0
+#     # Write data to .rda
+#     writeDatatoRDA(data = SectorUse,
+#                    data_name = paste0("Sector_Use_SUT_", year))
+#     # Write metadata to JSON
+#     writeMetadatatoJSON(package = "useeior",
+#                         name = paste0("Sector_Use_SUT_", year),
+#                         year = year,
+#                         source = "US Bureau of Economic Analysis",
+#                         url = url,
+#                         date_last_modified = date_last_modified,
+#                         date_accessed = date_accessed)
+#   }
+# }
+

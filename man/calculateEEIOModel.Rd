@@ -2,30 +2,37 @@
 % Please edit documentation in R/CalculationFunctions.R
 \name{calculateEEIOModel}
 \alias{calculateEEIOModel}
-\title{Calculate total emissions/resources (LCI) or total impact for USEEIO model for a given demand vector and perspective.}
+\title{Calculate total emissions/resources (LCI) and total impacts (LCIA) for an EEIO model
+for a given perspective and demand vector.}
 \usage{
 calculateEEIOModel(
   model,
   perspective,
-  demand = "production",
-  use_domestic = FALSE,
-  for_imports_using_domestic = FALSE
+  demand = "Production",
+  location = NULL,
+  use_domestic_requirements = FALSE
 )
 }
 \arguments{
 \item{model}{A complete EEIO model: a list with USEEIO model components and attributes.}
 
-\item{perspective}{Perspective of the model, can be "DIRECT", "INTERMEDIATE", or "FINAL".}
+\item{perspective}{Perspective of the model, can be "DIRECT" or "FINAL". "DIRECT" perspective
+aligns results with the sectors in which they are produced, while "FINAL" perspective aligns
+results with the sectors consumed by the final user.}
 
-\item{demand}{A character value or a matrix: if the former, can be "production" or "consumption"; if the latter, can be demand matrix for one or more sectors.}
+\item{demand}{A demand vector, can be name of a built-in model demand vector, e.g. "Production" or "Consumption",
+or an actual demand vector with names as one or more model sectors and
+numeric values in USD with the same dollar year as model.}
 
-\item{use_domestic}{A boolean value: if TRUE, use domestic A and FinalDemand matrices; if FALSE, use original A and FinalDemand matrices.}
+\item{location, }{str optional location code for demand vector, required for two-region models}
 
-\item{for_imports_using_domestic}{If TRUE, use total requirements for imports matrix (A)}
+\item{use_domestic_requirements}{A logical value: if TRUE, use domestic demand and L_d matrix;
+if FALSE, use complete demand and L matrix.}
 }
 \value{
-A list with LCI and LCIA results of the EEIO model.
+A list with LCI and LCIA results (in data.frame format) of the EEIO model.
 }
 \description{
-Calculate total emissions/resources (LCI) or total impact for USEEIO model for a given demand vector and perspective.
+Calculate total emissions/resources (LCI) and total impacts (LCIA) for an EEIO model
+for a given perspective and demand vector.
 }

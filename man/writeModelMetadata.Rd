@@ -2,12 +2,15 @@
 % Please edit documentation in R/WriteModel.R
 \name{writeModelMetadata}
 \alias{writeModelMetadata}
-\title{Write model metadata (indicators and demands) as CSV files to output folder.}
+\title{Write model metadata (indicators and demands, sectors, and flows) as CSV files to output folder
+format for file is here https://github.com/USEPA/USEEIO_API/blob/master/doc/data_format.md}
 \usage{
-writeModelMetadata(model)
+writeModelMetadata(model, dirs)
 }
 \arguments{
 \item{model}{A complete EEIO model: a list with USEEIO model components and attributes.}
+
+\item{dirs}{A named list of directories with model and data directory paths}
 }
 \description{
 Writes model metadata, including indicators and demands.
