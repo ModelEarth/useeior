@@ -7,6 +7,7 @@ Model specifications are assigned in a yml file based on the parameters shown be
 | BaseIOSchema | int | Y | The base IO schema (e.g. 2012) |
 | BaseIOLevel | str | Y | The base IO level of detail (e.g. `Detail`) |
 | IOYear | int | Y | The base IO year |
+| Alias | str | N | The alias provided to the model, typically also included in the model name. Required for two region models from stateior. |
 | ModelRegionAcronyms | list | Y | The model region acronyms |
 | ModelType | str | Y | The [model type](#Model-Types) (e.g. `EEIO`) |
 | IODataSource | str | Y | The model source (e.g. `BEA` or `stateior`) |
@@ -19,6 +20,7 @@ Model specifications are assigned in a yml file based on the parameters shown be
 | HybridizationSpecs | str | N | The [hybridization specifications](ModelCustomization.md#hybridization-file-specification) |
 | MUIOSpecs | str | N | The [mixed unit hybridization specifications](ModelCustomization.md#mixed-unit-file-specification) |
 | WIOSpecs | str | N | The [waste input output specifications](ModelCustomization.md#waste-input-output-file-specification) |
+| ExternalImportFactors | bool | N | Whether the model includes specifications for [Import Emission Factors](ModelCustomization.md#import-emission-factors) |
 | SatelliteTable | list |  | The [satellite table specifications](#Satellite-Table-Specifications) |
 | Indicators | list | N | The [indicator specifications](#Indicator-Specifications) |
 | DemandVectors | list |  | The [demand vector specifications](#Demand-Vector-Specifications) |
